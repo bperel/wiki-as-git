@@ -6,9 +6,30 @@ var fse = promisify(require('fs-extra'));
 var nodegit = require('nodegit');
 var https = require("https");
 var moment = require("moment");
+var winston = require("winston");
 
-var language = 'en';
-var articleName = 'Maïna';
+var defaults = {
+    language: 'en',
+    commitMessageLength: 100,
+    logLevel: 'info'
+};
+
+var log = new (winston.Logger)({
+    transports: [
+        new (winston.transports.Console)({ level: defaults.logLevel })
+    ]
+});
+
+var args = process.argv.slice(2);
+
+var articleName = args[0];
+
+if (!articleName) {
+    log.error('An article name is required');
+    process.exit(-1);
+}
+
+var language = args[1] || defaults.language;
 var fileName = articleName + '.wiki';
 
 var apiRoot = 'https://' + language + '.wikipedia.org/w/api.php';
@@ -22,7 +43,7 @@ var currentRevisionId = 0;
 function createCommitForCurrentRevision() {
     var revision = revisions[currentRevisionId];
     var fileContent = revision['*'];
-    var message = revision.comment.substr(0, 50);
+    var message = revision.comment.substr(0, defaults.commitMessageLength);
     var author = revision.user;
     var date = revision.timestamp;
 
@@ -64,13 +85,13 @@ function createCommitForCurrentRevision() {
             }
         })
         .done(function(commitId) {
-            console.log("New Commit: ", commitId);
+            log.verbose("New Commit: ", commitId);
             currentRevisionId++;
             if (currentRevisionId < revisions.length) {
                 createCommitForCurrentRevision();
             }
             else {
-                console.log('Done');
+                log.info('Done');
             }
         });
 }
