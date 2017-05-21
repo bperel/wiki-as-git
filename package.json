@@ -1,6 +1,6 @@
 {
   "name": "wiki-as-git",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "dependencies": {
 	"nodegit": "^0.18.3",
 	"moment": "^2.18.1",
