@@ -36,9 +36,11 @@ var apiRoot = 'https://' + language + '.wikipedia.org/w/api.php';
 var url = apiRoot + '?action=query&format=json&prop=revisions&titles=' + encodeURIComponent(articleName) + '&rvprop=timestamp%7Cuser%7Ccomment%7Ccontent&rvlimit=max';
 
 var repoDir = './' + language + '.wikipedia.org/' + articleName;
+var repoPath = path.resolve(process.cwd(), repoDir);
+
 var repo;
 var revisions;
-var currentRevisionId = 0;
+var currentRevisionId;
 
 function createCommitForCurrentRevision() {
     var revision = revisions[currentRevisionId];
@@ -91,17 +93,17 @@ function createCommitForCurrentRevision() {
                 createCommitForCurrentRevision();
             }
             else {
-                log.info('Done');
+                log.info('The article\'s revision history was saved in ' + repoPath);
             }
         });
 }
 
-fse.removeSync(path.resolve(__dirname, repoDir));
+fse.removeSync(repoPath);
 fse.ensureDir = promisify(fse.ensureDir);
 
-fse.ensureDir(path.resolve(__dirname, repoDir))
+fse.ensureDir(repoPath)
     .then(function() {
-        return nodegit.Repository.init(path.resolve(__dirname, repoDir), 0);
+        return nodegit.Repository.init(repoPath, 0);
     })
     .then(function(repoCreated) {
         repo = repoCreated;
@@ -114,11 +116,11 @@ fse.ensureDir(path.resolve(__dirname, repoDir))
 
             res.on('end', function(){
                 var response = JSON.parse(body);
-                currentRevisionId = 0;
                 Object.keys(response.query.pages).forEach(function(pageId) {
                     var page = response.query.pages[pageId];
                     revisions = page.revisions.reverse();
 
+                    currentRevisionId = 0;
                     createCommitForCurrentRevision();
                 });
             });
