@@ -1,10 +1,13 @@
 {
   "name": "wiki-as-git",
-  "version": "0.0.4",
+  "version": "0.0.5",
   "dependencies": {
 	"nodegit": "^0.18.3",
 	"moment": "^2.18.1",
 	"winston": "^2.3.1"
+  },
+  "bin": {
+	"wiki-as-git": "./wiki-as-git.js"
   },
   "description": "Check a Wikipedia article's revision history using git commands",
   "main": "wiki-as-git.js",
