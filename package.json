@@ -2,8 +2,28 @@
   "name": "wiki-as-git",
   "version": "0.0.1",
   "dependencies": {
-    "nodegit": "^0.18.3",
-    "moment": "^2.18.1",
-    "winston": "^2.3.1"
-  }
+	"nodegit": "^0.18.3",
+	"moment": "^2.18.1",
+	"winston": "^2.3.1"
+  },
+  "description": "Check a Wikipedia article's revision history using git commands",
+  "main": "wiki-as-git.js",
+  "devDependencies": {},
+  "scripts": {
+	"test": "nodejs wiki-as-git.js \"Wiki\""
+  },
+  "repository": {
+	"type": "git",
+	"url": "git+https://github.com/bperel/wiki-as-git.git"
+  },
+  "keywords": [
+	"wikipedia",
+	"git"
+  ],
+  "author": "Bruno Perel",
+  "license": "Apache-2.0",
+  "bugs": {
+	"url": "https://github.com/bperel/wiki-as-git/issues"
+  },
+  "homepage": "https://github.com/bperel/wiki-as-git#readme"
 }
