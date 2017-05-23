@@ -1,15 +1,26 @@
 #!/usr/bin/env node
 
+var pjson = require('./package.json');
+
 var path = require('path');
 var promisify = require('promisify-node');
 var fse = promisify(require('fs-extra'));
-var nodegit = require('nodegit');
 var https = require("https");
 var moment = require("moment");
 var winston = require("winston");
 
+var ArgumentParser = require("argparse").ArgumentParser;
+var argparser = new ArgumentParser({
+  description: pjson.name,
+  version: pjson.version
+});
+
+argparser.addArgument('--language',{ nargs: 1, defaultValue: 'en', help: 'The Wikipedia language version to use (ex: en, fr, etc.)' });
+argparser.addArgument('articleName');
+
+var args = argparser.parseArgs();
+
 var defaults = {
-    language: 'en',
     commitMessageLength: 100,
     logLevel: 'info'
 };
@@ -20,22 +31,12 @@ var log = new (winston.Logger)({
     ]
 });
 
-var args = process.argv.slice(2);
+var fileName = args.articleName + '.wiki';
 
-var articleName = args[0];
+var apiRoot = 'https://' + args.language + '.wikipedia.org/w/api.php';
+var url = apiRoot + '?action=query&format=json&prop=revisions&titles=' + encodeURIComponent(args.articleName) + '&rvprop=timestamp%7Cuser%7Ccomment%7Ccontent&rvlimit=max';
 
-if (!articleName) {
-    log.error('An article name is required');
-    process.exit(-1);
-}
-
-var language = args[1] || defaults.language;
-var fileName = articleName + '.wiki';
-
-var apiRoot = 'https://' + language + '.wikipedia.org/w/api.php';
-var url = apiRoot + '?action=query&format=json&prop=revisions&titles=' + encodeURIComponent(articleName) + '&rvprop=timestamp%7Cuser%7Ccomment%7Ccontent&rvlimit=max';
-
-var repoDir = './' + language + '.wikipedia.org/' + articleName;
+var repoDir = './' + args.language + '.wikipedia.org/' + args.articleName;
 var repoPath = path.resolve(process.cwd(), repoDir);
 
 var repo;

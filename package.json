@@ -2,6 +2,7 @@
   "name": "wiki-as-git",
   "version": "0.0.5",
   "dependencies": {
+    "argparse": "^1.0.9",
 	"nodegit": "^0.18.3",
 	"moment": "^2.18.1",
 	"winston": "^2.3.1"
