@@ -3,6 +3,7 @@
 var pjson = require('./package.json');
 
 var path = require('path');
+var nodegit = require('nodegit');
 var promisify = require('promisify-node');
 var fse = promisify(require('fs-extra'));
 var https = require("https");
@@ -104,9 +105,8 @@ function createCommitForCurrentRevision() {
 
 log.verbose("Cleaning previous local repository if existing");
 fse.removeSync(repoPath);
-fse.ensureDir = promisify(fse.ensureDir);
 
-fse.ensureDir(repoPath)
+promisify(fse.ensureDir)(repoPath)
     .then(function() {
         return nodegit.Repository.init(repoPath, 0);
     })
