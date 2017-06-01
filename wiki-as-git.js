@@ -16,6 +16,7 @@ var argparser = new ArgumentParser({
 });
 
 argparser.addArgument('--language',{ nargs: 1, defaultValue: 'en', help: 'The Wikipedia language version to use (ex: en, fr, etc.)' });
+argparser.addArgument('-vvv',{ nargs: 0, help: 'Verbose log' });
 argparser.addArgument('articleName');
 
 var args = argparser.parseArgs();
@@ -27,7 +28,7 @@ var defaults = {
 
 var log = new (winston.Logger)({
     transports: [
-        new (winston.transports.Console)({ level: defaults.logLevel })
+        new (winston.transports.Console)({ level: args.vvv ? 'verbose': defaults.logLevel })
     ]
 });
 
@@ -49,6 +50,8 @@ function createCommitForCurrentRevision() {
     var message = revision.comment.substr(0, defaults.commitMessageLength);
     var author = revision.user;
     var date = revision.timestamp;
+
+    log.verbose("Creating commit for revision " + currentRevisionId);
 
     promisify(fse.writeFile(path.join(repo.workdir(), fileName), fileContent))
         .then(function(){
@@ -88,7 +91,7 @@ function createCommitForCurrentRevision() {
             }
         })
         .done(function(commitId) {
-            log.verbose("New Commit: ", commitId);
+            log.verbose("New commit created: ", commitId);
             currentRevisionId++;
             if (currentRevisionId < revisions.length) {
                 createCommitForCurrentRevision();
@@ -99,6 +102,7 @@ function createCommitForCurrentRevision() {
         });
 }
 
+log.verbose("Cleaning previous local repository if existing");
 fse.removeSync(repoPath);
 fse.ensureDir = promisify(fse.ensureDir);
 
@@ -107,7 +111,9 @@ fse.ensureDir(repoPath)
         return nodegit.Repository.init(repoPath, 0);
     })
     .then(function(repoCreated) {
+        log.verbose("Created empty repository " + repoCreated);
         repo = repoCreated;
+        log.verbose("Retrieving article history from " + url);
         https.get(url, function(res){
             var body = '';
 
@@ -116,6 +122,7 @@ fse.ensureDir(repoPath)
             });
 
             res.on('end', function(){
+                log.verbose("Article history has been retrieved");
                 var response = JSON.parse(body);
                 Object.keys(response.query.pages).forEach(function(pageId) {
                     var page = response.query.pages[pageId];
