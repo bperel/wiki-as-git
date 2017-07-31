@@ -24,6 +24,9 @@
 	"wikipedia",
 	"git"
   ],
+  "engines": {
+	"node": ">= 4.5.0"
+  },
   "author": "Bruno Perel",
   "license": "Apache-2.0",
   "bugs": {
