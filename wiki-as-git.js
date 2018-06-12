@@ -48,7 +48,7 @@ var currentRevisionId;
 function createCommitForCurrentRevision() {
     var revision = revisions[currentRevisionId];
     var fileContent = revision['*'];
-    var message = revision.comment.substr(0, defaults.commitMessageLength);
+    var message = (revision.comment || '').substr(0, defaults.commitMessageLength);
     var author = revision.user;
     var date = revision.timestamp;
 
