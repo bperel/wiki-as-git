@@ -4,9 +4,14 @@
 
 An easy way to check the revision history of a Wikipedia article using Git commands.
 
-# Requirements
+# Install
 
-`libstdc++-4.9-dev` is required for the `nodegit` dependency. Either install it or build `nodegit` manually using : `BUILD_ONLY=true npm install nodegit`
+* You can run wiki-as-git using our Docker image :
+`docker run --rm -it bperel/wiki-as-git Hello`
+
+* Or you can install it manually :
+  * `libstdc++-4.9-dev` is required for the `nodegit` dependency. Either install it or build `nodegit` manually using : `BUILD_ONLY=true npm install nodegit`
+  * Then run `npm install`
 
 ## Usage
 
