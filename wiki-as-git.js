@@ -27,7 +27,7 @@ var defaults = {
     logLevel: 'info'
 };
 
-var log = new (winston.Logger)({
+var log = winston.createLogger({
     transports: [
         new (winston.transports.Console)({ level: args.vvv ? 'verbose': defaults.logLevel })
     ]
