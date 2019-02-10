@@ -2,13 +2,14 @@
 
 var pjson = require('./package.json');
 
-var path = require('path');
-var nodegit = require('nodegit');
-var promisify = require('promisify-node');
-var fse = promisify(require('fs-extra'));
+var path = require("path");
+var nodegit = require("nodegit");
+var promisify = require("promisify-node");
+var fse = promisify(require("fs-extra"));
 var https = require("https");
 var moment = require("moment");
 var winston = require("winston");
+var querystring = require("querystring");
 
 var ArgumentParser = require("argparse").ArgumentParser;
 var argparser = new ArgumentParser({
@@ -35,8 +36,16 @@ var log = winston.createLogger({
 
 var fileName = args.articleName + '.wiki';
 
-var apiRoot = 'https://' + args.language + '.wikipedia.org/w/api.php';
-var url = apiRoot + '?action=query&format=json&prop=revisions&titles=' + encodeURIComponent(args.articleName) + '&rvprop=timestamp%7Cuser%7Ccomment%7Ccontent&rvlimit=max';
+var url = 'https://' + args.language + '.wikipedia.org/w/api.php?'
+    + querystring.stringify({
+        action: 'query',
+        format: 'json',
+        prop: 'revisions',
+        titles: args.articleName,
+        rvprop: ['timestamp','user','comment','content'].join('|'),
+        rvlimit: 'max',
+        rvslots: 'main'
+    });
 
 var repoDir = './' + args.language + '.wikipedia.org/' + args.articleName;
 var repoPath = path.resolve(process.cwd(), repoDir);
@@ -91,7 +100,7 @@ function createCommitForCurrentRevision() {
                     })
             }
         })
-        .done(function(commitId) {
+        .then(function(commitId) {
             log.verbose("New commit created: ", commitId);
             currentRevisionId++;
             if (currentRevisionId < revisions.length) {
@@ -126,6 +135,10 @@ promisify(fse.ensureDir)(repoPath)
                 var response = JSON.parse(body);
                 Object.keys(response.query.pages).forEach(function(pageId) {
                     var page = response.query.pages[pageId];
+                    if (!(page && page.revisions && page.revisions.length)) {
+                        log.error('Invalid response : ' + JSON.stringify(page));
+                        process.exit(1);
+                    }
                     revisions = page.revisions.reverse();
 
                     currentRevisionId = 0;
