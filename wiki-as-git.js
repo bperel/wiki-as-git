@@ -48,7 +48,7 @@ var url = 'https://' + args.language + '.wikipedia.org/w/api.php?'
     });
 
 var repoDir = './' + args.language + '.wikipedia.org/' + args.articleName;
-var repoPath = path.resolve(process.cwd(), repoDir);
+var repoPath = path.resolve(process.cwd(), "articles", repoDir);
 
 var repo;
 var revisions;
@@ -78,7 +78,7 @@ function createCommitForCurrentRevision() {
         })
         .then(function() {
             var timestamp = moment(date, moment.ISO_8601);
-            var authorSignature = nodegit.Signature.create(author, author + "@test.com", timestamp.unix(), 60);
+            var authorSignature = nodegit.Signature.create(author, author + "@" + args.language + ".wikipedia.org", timestamp.unix(), 60);
 
             if (currentRevisionId === 0) { // First commit
                 return index.writeTree()
