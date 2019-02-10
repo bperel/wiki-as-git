@@ -1,6 +1,9 @@
-FROM alpine
-RUN apk add --update nodejs nodejs-npm git g++ libgit2-dev libcurl
-RUN ln -s /usr/lib/libcurl.so.4 /usr/lib/libcurl-gnutls.so.4
-RUN cd /home && git clone --depth=1 --single-branch -b 0.1.4 https://github.com/bperel/wiki-as-git && cd wiki-as-git && npm install
+FROM node:8-jessie
+
+RUN apt-get update && apt-get install -y libgit2-dev
+
+RUN cd /home && git clone --single-branch -b 0.1.5 --depth=1 https://github.com/bperel/wiki-as-git
+WORKDIR /home/wiki-as-git
+RUN cd /home/wiki-as-git && npm rebuild && npm install
+
 ENTRYPOINT ["/home/wiki-as-git/wiki-as-git.js"]
-CMD ["Test"]
