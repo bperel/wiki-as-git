@@ -48,7 +48,7 @@ var url = 'https://' + args.language + '.wikipedia.org/w/api.php?'
     });
 
 var repoDir = './' + args.language + '.wikipedia.org/' + args.articleName;
-var repoPath = path.resolve(process.cwd(), "articles", repoDir);
+var repoPath = path.resolve(__dirname, "articles", repoDir);
 
 var repo;
 var revisions;
