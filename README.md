@@ -7,7 +7,7 @@ An easy way to check the revision history of a Wikipedia article using Git comma
 # Install
 
 * You can run wiki-as-git using our Docker image :
-`docker run --rm -it -v $(pwd)/articles:articles bperel/wiki-as-git Hello`
+`docker run --rm -it -v $(pwd)/articles:/home/wiki-as-git/articles bperel/wiki-as-git "Hello world"`
 
 * Or you can install it manually :
   * `libgit2-dev` is required for the `nodegit` dependency.

@@ -44,11 +44,11 @@ var url = 'https://' + args.language + '.wikipedia.org/w/api.php?'
         titles: args.articleName,
         rvprop: ['timestamp','user','comment','content'].join('|'),
         rvlimit: 'max',
-        rvslots: 'main'
+        rvslots: '*'
     });
 
 var repoDir = './' + args.language + '.wikipedia.org/' + args.articleName;
-var repoPath = path.resolve(process.cwd(), "articles", repoDir);
+var repoPath = path.resolve(__dirname, "articles", repoDir);
 
 var repo;
 var revisions;
@@ -56,7 +56,7 @@ var currentRevisionId;
 
 function createCommitForCurrentRevision() {
     var revision = revisions[currentRevisionId];
-    var fileContent = revision['*'];
+    var fileContent = revision.slots.main['*'];
     var message = (revision.comment || '').substr(0, defaults.commitMessageLength);
     var author = revision.user;
     var date = revision.timestamp;
@@ -101,7 +101,7 @@ function createCommitForCurrentRevision() {
             }
         })
         .then(function(commitId) {
-            log.verbose("New commit created: ", commitId);
+            log.verbose("New commit created: " + commitId);
             currentRevisionId++;
             if (currentRevisionId < revisions.length) {
                 createCommitForCurrentRevision();
@@ -120,7 +120,7 @@ promisify(fse.ensureDir)(repoPath)
         return nodegit.Repository.init(repoPath, 0);
     })
     .then(function(repoCreated) {
-        log.verbose("Created empty repository " + repoCreated);
+        log.verbose("Created empty repository at " + repoCreated.path());
         repo = repoCreated;
         log.verbose("Retrieving article history from " + url);
         https.get(url, function(res){
