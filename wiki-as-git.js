@@ -36,32 +36,21 @@ var log = winston.createLogger({
 
 var fileName = args.articleName + '.wiki';
 
-var url = 'https://' + args.language + '.wikipedia.org/w/api.php?'
-    + querystring.stringify({
-        action: 'query',
-        format: 'json',
-        prop: 'revisions',
-        titles: args.articleName,
-        rvprop: ['timestamp','user','comment','content'].join('|'),
-        rvlimit: 'max',
-        rvslots: '*'
-    });
-
 var repoDir = './' + args.language + '.wikipedia.org/' + args.articleName;
 var repoPath = path.resolve(__dirname, "articles", repoDir);
 
 var repo;
-var revisions;
-var currentRevisionId;
+var revisions = [];
+var revisionNumber = 0;
 
 function createCommitForCurrentRevision() {
-    var revision = revisions[currentRevisionId];
+    var revision = revisions[revisionNumber];
     var fileContent = revision.slots.main['*'];
     var message = (revision.comment || '').substr(0, defaults.commitMessageLength);
     var author = revision.user;
     var date = revision.timestamp;
 
-    log.verbose("Creating commit for revision " + currentRevisionId);
+    log.verbose("Creating commit for revision " + revisionNumber);
 
     promisify(fse.writeFile(path.join(repo.workdir(), fileName), fileContent))
         .then(function(){
@@ -80,7 +69,7 @@ function createCommitForCurrentRevision() {
             var timestamp = moment(date, moment.ISO_8601);
             var authorSignature = nodegit.Signature.create(author, author + "@" + args.language + ".wikipedia.org", timestamp.unix(), 60);
 
-            if (currentRevisionId === 0) { // First commit
+            if (revisionNumber === 0) {
                 return index.writeTree()
                     .then(function(oid) {
                         return repo.createCommit("HEAD", authorSignature, authorSignature, message, oid, []);
@@ -102,8 +91,8 @@ function createCommitForCurrentRevision() {
         })
         .then(function(commitId) {
             log.verbose("New commit created: " + commitId);
-            currentRevisionId++;
-            if (currentRevisionId < revisions.length) {
+            revisionNumber++;
+            if (revisionNumber < revisions.length) {
                 createCommitForCurrentRevision();
             }
             else {
@@ -122,28 +111,55 @@ promisify(fse.ensureDir)(repoPath)
     .then(function(repoCreated) {
         log.verbose("Created empty repository at " + repoCreated.path());
         repo = repoCreated;
-        log.verbose("Retrieving article history from " + url);
-        https.get(url, function(res){
-            var body = '';
+        fetchFromApi();
+    });
 
-            res.on('data', function(chunk){
+
+function fetchFromApi(rvcontinue) {
+    var url = getApiUrl(rvcontinue);
+    log.verbose("Retrieving article history from " + url);
+    https.get(url, function (res) {
+        var body = '';
+        res
+            .on('data', function (chunk) {
                 body += chunk;
-            });
-
-            res.on('end', function(){
-                log.verbose("Article history has been retrieved");
+            })
+            .on('end', function () {
                 var response = JSON.parse(body);
-                Object.keys(response.query.pages).forEach(function(pageId) {
+                Object.keys(response.query.pages).forEach(function (pageId) {
                     var page = response.query.pages[pageId];
                     if (!(page && page.revisions && page.revisions.length)) {
                         log.error('Invalid response : ' + JSON.stringify(page));
                         process.exit(1);
                     }
-                    revisions = page.revisions.reverse();
-
-                    currentRevisionId = 0;
-                    createCommitForCurrentRevision();
+                    log.verbose(page.revisions.length + " article revisions has been retrieved");
+                    revisions = revisions.concat(page.revisions);
+                    rvcontinue = (response.continue || {}).rvcontinue || null;
+                    if (rvcontinue) {
+                        log.verbose('rvcontinue detected, retrieving next revisions');
+                        fetchFromApi(rvcontinue);
+                    }
+                    else {
+                        revisions = revisions.reverse();
+                        createCommitForCurrentRevision();
+                    }
                 });
             });
-        })
-     });
+    })
+}
+
+function getApiUrl(rvcontinue) {
+    var params = {
+        action: 'query',
+        format: 'json',
+        prop: 'revisions',
+        titles: args.articleName,
+        rvprop: ['timestamp', 'user', 'comment', 'content'].join('|'),
+        rvlimit: 'max',
+        rvslots: '*'
+    };
+    if (rvcontinue) {
+        params.rvcontinue = rvcontinue;
+    }
+    return 'https://' + args.language + '.wikipedia.org/w/api.php?' + querystring.stringify(params);
+}
