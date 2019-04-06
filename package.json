@@ -1,6 +1,6 @@
 {
  "name": "wiki-as-git",
- "version": "0.1.6",
+ "version": "0.1.7",
  "dependencies": {
   "argparse": "^1.0.10",
   "fs-extra": "^7.0.1",
