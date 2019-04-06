@@ -1,18 +1,18 @@
 #!/usr/bin/env node
 
-var pjson = require('./package.json');
+const pjson = require('./package.json');
 
-var path = require("path");
-var nodegit = require("nodegit");
-var promisify = require("promisify-node");
-var fse = promisify(require("fs-extra"));
-var https = require("https");
-var moment = require("moment");
-var winston = require("winston");
-var querystring = require("querystring");
+const path = require("path");
+const nodegit = require("nodegit");
+const promisify = require("promisify-node");
+const fse = promisify(require("fs-extra"));
+const https = require("https");
+const moment = require("moment");
+const winston = require("winston");
+const querystring = require("querystring");
 
-var ArgumentParser = require("argparse").ArgumentParser;
-var argparser = new ArgumentParser({
+const ArgumentParser = require("argparse").ArgumentParser;
+const argparser = new ArgumentParser({
   description: pjson.name,
   version: pjson.version
 });
@@ -21,145 +21,127 @@ argparser.addArgument('--language',{ nargs: 1, defaultValue: 'en', help: 'The Wi
 argparser.addArgument('-vvv',{ nargs: 0, help: 'Verbose log' });
 argparser.addArgument('articleName');
 
-var args = argparser.parseArgs();
+const args = argparser.parseArgs();
 
-var defaults = {
-    commitMessageLength: 100,
-    logLevel: 'info'
+const defaults = {
+  commitMessageLength: 100,
+  logLevel: 'info'
 };
 
-var log = winston.createLogger({
-    transports: [
-        new (winston.transports.Console)({ level: args.vvv ? 'verbose': defaults.logLevel })
-    ]
+const log = winston.createLogger({
+  transports: [
+    new (winston.transports.Console)({level: args.vvv ? 'verbose' : defaults.logLevel})
+  ]
 });
 
-var fileName = args.articleName + '.wiki';
+const fileName = args.articleName + '.wiki';
+const repoDir = './' + args.language + '.wikipedia.org/' + args.articleName;
+const repoPath = path.resolve(__dirname, "articles", repoDir);
 
-var repoDir = './' + args.language + '.wikipedia.org/' + args.articleName;
-var repoPath = path.resolve(__dirname, "articles", repoDir);
-
-var repo;
-var revisions = [];
-var revisionNumber = 0;
-
-function createCommitForCurrentRevision() {
-    var revision = revisions[revisionNumber];
-    var fileContent = revision.slots.main['*'];
-    var message = (revision.comment || '').substr(0, defaults.commitMessageLength);
-    var author = revision.user;
-    var date = revision.timestamp;
-
-    log.verbose("Creating commit for revision " + revisionNumber);
-
-    promisify(fse.writeFile(path.join(repo.workdir(), fileName), fileContent))
-        .then(function(){
-            return repo.refreshIndex();
-        })
-        .then(function(idx) {
-            index = idx;
-        })
-        .then(function() {
-            return index.addByPath(fileName);
-        })
-        .then(function() {
-            return index.write();
-        })
-        .then(function() {
-            var timestamp = moment(date, moment.ISO_8601);
-            var authorSignature = nodegit.Signature.create(author, author + "@" + args.language + ".wikipedia.org", timestamp.unix(), 60);
-
-            if (revisionNumber === 0) {
-                return index.writeTree()
-                    .then(function(oid) {
-                        return repo.createCommit("HEAD", authorSignature, authorSignature, message, oid, []);
-                    })
-            }
-            else {
-                return index.writeTree()
-                    .then(function(oidResult) {
-                         oid = oidResult;
-                         return nodegit.Reference.nameToId(repo, "HEAD");
-                    })
-                    .then(function(head) {
-                        return repo.getCommit(head);
-                    })
-                    .then(function(parent) {
-                        return repo.createCommit("HEAD", authorSignature, authorSignature, message, oid, [parent]);
-                    })
-            }
-        })
-        .then(function(commitId) {
-            log.verbose("New commit created: " + commitId);
-            revisionNumber++;
-            if (revisionNumber < revisions.length) {
-                createCommitForCurrentRevision();
-            }
-            else {
-                log.info('The article\'s revision history was saved in ' + repoPath);
-            }
-        });
-}
+let repo;
+let revisions = [];
+let revisionNumber = 0;
 
 log.verbose("Cleaning previous local repository if existing");
 fse.removeSync(repoPath);
 
-promisify(fse.ensureDir)(repoPath)
-    .then(function() {
-        return nodegit.Repository.init(repoPath, 0);
+const getApiUrl = rvcontinue => {
+  const params = {
+    action: 'query',
+    format: 'json',
+    prop: 'revisions',
+    titles: args.articleName,
+    rvprop: ['timestamp', 'user', 'comment', 'content'].join('|'),
+    rvlimit: 'max',
+    rvslots: '*'
+  };
+  if (rvcontinue) {
+    params.rvcontinue = rvcontinue;
+  }
+  return 'https://' + args.language + '.wikipedia.org/w/api.php?' + querystring.stringify(params);
+};
+
+const createCommitForCurrentRevision = () => {
+  log.verbose("Creating commit for revision " + revisionNumber);
+
+  const revision = revisions[revisionNumber];
+  const fileContent = revision.slots.main['*'];
+  const message = (revision.comment || '').substr(0, defaults.commitMessageLength);
+  const author = revision.user;
+  const date = revision.timestamp;
+  let index, oid;
+
+  promisify(fse.writeFile(path.join(repo.workdir(), fileName), fileContent))
+    .then(() => repo.refreshIndex())
+    .then(idx => { index = idx; })
+    .then(() => index.addByPath(fileName))
+    .then(() => index.write())
+    .then(() => {
+      const timestamp = moment(date, moment.ISO_8601);
+      const authorSignature = nodegit.Signature.create(author, author + "@" + args.language + ".wikipedia.org", timestamp.unix(), 60);
+
+      if (revisionNumber === 0) {
+        return index.writeTree()
+          .then(oid => repo.createCommit("HEAD", authorSignature, authorSignature, message, oid, []))
+      }
+      else {
+        return index.writeTree()
+          .then(oidResult => {
+             oid = oidResult;
+             return nodegit.Reference.nameToId(repo, "HEAD");
+          })
+          .then(head => repo.getCommit(head))
+          .then(parent => repo.createCommit("HEAD", authorSignature, authorSignature, message, oid, [parent]))
+      }
     })
-    .then(function(repoCreated) {
-        log.verbose("Created empty repository at " + repoCreated.path());
-        repo = repoCreated;
-        fetchFromApi();
+    .then(commitId => {
+      log.verbose("New commit created: " + commitId);
+      revisionNumber++;
+      if (revisionNumber < revisions.length) {
+        createCommitForCurrentRevision();
+      }
+      else {
+        log.info('The article\'s revision history was saved in ' + repoPath);
+      }
     });
+};
 
+const fetchFromApi = rvcontinue => {
+  const url = getApiUrl(rvcontinue);
+  log.verbose("Retrieving article history from " + url);
+  https.get(url, res => {
+    let body = '';
+    res
+      .on('data', chunk => { body += chunk; })
+      .on('end', () => {
+        const response = JSON.parse(body);
+        Object.keys(response.query.pages).forEach(pageId => {
+          const page = response.query.pages[pageId];
+          if (!(page && page.revisions && page.revisions.length)) {
+            log.error('Invalid response : ' + JSON.stringify(page));
+            process.exit(1);
+          }
+          log.verbose(page.revisions.length + " article revisions has been retrieved");
+          revisions = revisions.concat(page.revisions);
 
-function fetchFromApi(rvcontinue) {
-    var url = getApiUrl(rvcontinue);
-    log.verbose("Retrieving article history from " + url);
-    https.get(url, function (res) {
-        var body = '';
-        res
-            .on('data', function (chunk) {
-                body += chunk;
-            })
-            .on('end', function () {
-                var response = JSON.parse(body);
-                Object.keys(response.query.pages).forEach(function (pageId) {
-                    var page = response.query.pages[pageId];
-                    if (!(page && page.revisions && page.revisions.length)) {
-                        log.error('Invalid response : ' + JSON.stringify(page));
-                        process.exit(1);
-                    }
-                    log.verbose(page.revisions.length + " article revisions has been retrieved");
-                    revisions = revisions.concat(page.revisions);
-                    rvcontinue = (response.continue || {}).rvcontinue || null;
-                    if (rvcontinue) {
-                        log.verbose('rvcontinue detected, retrieving next revisions');
-                        fetchFromApi(rvcontinue);
-                    }
-                    else {
-                        revisions = revisions.reverse();
-                        createCommitForCurrentRevision();
-                    }
-                });
-            });
-    })
-}
+          rvcontinue = (response.continue || {}).rvcontinue || null;
+          if (rvcontinue) {
+            log.verbose('rvcontinue detected, retrieving next revisions');
+            fetchFromApi(rvcontinue);
+          }
+          else {
+            revisions = revisions.reverse();
+            createCommitForCurrentRevision();
+          }
+        });
+      });
+  })
+};
 
-function getApiUrl(rvcontinue) {
-    var params = {
-        action: 'query',
-        format: 'json',
-        prop: 'revisions',
-        titles: args.articleName,
-        rvprop: ['timestamp', 'user', 'comment', 'content'].join('|'),
-        rvlimit: 'max',
-        rvslots: '*'
-    };
-    if (rvcontinue) {
-        params.rvcontinue = rvcontinue;
-    }
-    return 'https://' + args.language + '.wikipedia.org/w/api.php?' + querystring.stringify(params);
-}
+promisify(fse.ensureDir)(repoPath)
+  .then(() => nodegit.Repository.init(repoPath, 0))
+  .then(repoCreated => {
+    log.verbose("Created empty repository at " + repoCreated.path());
+    repo = repoCreated;
+    fetchFromApi();
+  });
