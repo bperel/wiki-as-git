@@ -3,9 +3,9 @@
  "version": "0.1.8",
  "dependencies": {
   "argparse": "^1.0.10",
-  "fs-extra": "^7.0.1",
+  "fs-extra": "^8.1.0",
   "moment": "^2.24.0",
-  "nodegit": "^0.24.1",
+  "nodegit": "^0.24.3",
   "promisify-node": "^0.5.0",
   "winston": "^3.2.1"
  },
@@ -16,7 +16,7 @@
  "main": "wiki-as-git.js",
  "devDependencies": {},
  "scripts": {
-  "test": "nodejs wiki-as-git.js \"Wiki\""
+  "test": "nodejs wiki-as-git.js \"Wiki Peak\""
  },
  "repository": {
   "type": "git",
