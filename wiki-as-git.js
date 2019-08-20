@@ -34,8 +34,8 @@ const log = winston.createLogger({
   ]
 });
 
-const fileName = args.articleName + '.wiki';
-const repoDir = './' + args.language + '.wikipedia.org/' + args.articleName;
+const fileName = `${args.articleName}.wiki`;
+const repoDir = `./${args.language}.wikipedia.org/${args.articleName}`;
 const repoPath = path.resolve(__dirname, "articles", repoDir);
 
 let repo;
@@ -58,11 +58,11 @@ const getApiUrl = rvcontinue => {
   if (rvcontinue) {
     params.rvcontinue = rvcontinue;
   }
-  return 'https://' + args.language + '.wikipedia.org/w/api.php?' + querystring.stringify(params);
+  return `https://${args.language}.wikipedia.org/w/api.php?${querystring.stringify(params)}`;
 };
 
 const createCommitForCurrentRevision = () => {
-  log.verbose("Creating commit for revision " + revisionNumber);
+  log.verbose(`Creating commit for revision ${revisionNumber}`);
 
   const revision = revisions[revisionNumber];
   const fileContent = revision.slots.main['*'];
@@ -78,7 +78,7 @@ const createCommitForCurrentRevision = () => {
     .then(() => index.write())
     .then(() => {
       const timestamp = moment(date, moment.ISO_8601);
-      const authorSignature = nodegit.Signature.create(author, author + "@" + args.language + ".wikipedia.org", timestamp.unix(), 60);
+      const authorSignature = nodegit.Signature.create(author, `${author}@${args.language}.wikipedia.org`, timestamp.unix(), 60);
 
       if (revisionNumber === 0) {
         return index.writeTree()
@@ -95,20 +95,20 @@ const createCommitForCurrentRevision = () => {
       }
     })
     .then(commitId => {
-      log.verbose("New commit created: " + commitId);
+      log.verbose(`New commit created: ${commitId}`);
       revisionNumber++;
       if (revisionNumber < revisions.length) {
         createCommitForCurrentRevision();
       }
       else {
-        log.info('The article\'s revision history was saved in ' + repoPath);
+        log.info(`The article's revision history was saved in ${repoPath}`);
       }
     });
 };
 
 const fetchFromApi = rvcontinue => {
   const url = getApiUrl(rvcontinue);
-  log.verbose("Retrieving article history from " + url);
+  log.verbose(`Retrieving article history from ${url}`);
   https.get(url, res => {
     let body = '';
     res
@@ -118,10 +118,10 @@ const fetchFromApi = rvcontinue => {
         Object.keys(response.query.pages).forEach(pageId => {
           const page = response.query.pages[pageId];
           if (!(page && page.revisions && page.revisions.length)) {
-            log.error('Invalid response : ' + JSON.stringify(page));
+            log.error(`Invalid response : ${JSON.stringify(page)}`);
             process.exit(1);
           }
-          log.verbose(page.revisions.length + " article revisions has been retrieved");
+          log.verbose(`${page.revisions.length} article revisions has been retrieved`);
           revisions = revisions.concat(page.revisions);
 
           rvcontinue = (response.continue || {}).rvcontinue || null;
@@ -141,7 +141,7 @@ const fetchFromApi = rvcontinue => {
 promisify(fse.ensureDir)(repoPath)
   .then(() => nodegit.Repository.init(repoPath, 0))
   .then(repoCreated => {
-    log.verbose("Created empty repository at " + repoCreated.path());
+    log.verbose(`Created empty repository at ${repoCreated.path()}`);
     repo = repoCreated;
     fetchFromApi();
   });
