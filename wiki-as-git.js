@@ -67,7 +67,7 @@ const createCommitForCurrentRevision = () => {
   const revision = revisions[revisionNumber];
   const fileContent = revision.slots.main['*'];
   const message = (revision.comment || '').substr(0, defaults.commitMessageLength);
-  const author = revision.user;
+  const author = revision.user || "[Deleted user]";
   const date = revision.timestamp;
   let index, oid;
 
