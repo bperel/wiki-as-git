@@ -17,4 +17,6 @@ An easy way to check the revision history of a Wikipedia article using Git comma
 
 `wiki-as-git.js [--language=en] "<Article name>"`
 
+If you possess bot credentials for the wiki that you wish to target, copy-paste `settings.example.json` into a file named `settings.json` and fill in the bot's credentials. This will lift some limits of the Mediawiki API and make wiki-as-git much faster.
+
 ![alt text](wiki-as-git%20demo.gif)

@@ -1,15 +1,21 @@
 #!/usr/bin/env node
 
 const pjson = require('./package.json');
+let settings;
+try {
+  settings = require('./settings.json');
+}
+catch(error) {
+  settings = {};
+}
 
+const mwBot = require('mwbot');
 const path = require("path");
 const nodegit = require("nodegit");
 const promisify = require("promisify-node");
 const fse = promisify(require("fs-extra"));
-const https = require("https");
 const moment = require("moment");
 const winston = require("winston");
-const querystring = require("querystring");
 
 const ArgumentParser = require("argparse").ArgumentParser;
 const argparser = new ArgumentParser({
@@ -45,21 +51,9 @@ let revisionNumber = 0;
 log.verbose("Cleaning previous local repository if existing");
 fse.removeSync(repoPath);
 
-const getApiUrl = rvcontinue => {
-  const params = {
-    action: 'query',
-    format: 'json',
-    prop: 'revisions',
-    titles: args.articleName,
-    rvprop: ['timestamp', 'user', 'comment', 'content'].join('|'),
-    rvlimit: 'max',
-    rvslots: '*'
-  };
-  if (rvcontinue) {
-    params.rvcontinue = rvcontinue;
-  }
-  return `https://${args.language}.wikipedia.org/w/api.php?${querystring.stringify(params)}`;
-};
+let bot = new mwBot({
+  apiUrl: `https://${args.language}.wikipedia.org/w/api.php`
+});
 
 const createCommitForCurrentRevision = () => {
   log.verbose(`Creating commit for revision ${revisionNumber}`);
@@ -107,35 +101,37 @@ const createCommitForCurrentRevision = () => {
 };
 
 const fetchFromApi = rvcontinue => {
-  const url = getApiUrl(rvcontinue);
-  log.verbose(`Retrieving article history from ${url}`);
-  https.get(url, res => {
-    let body = '';
-    res
-      .on('data', chunk => { body += chunk; })
-      .on('end', () => {
-        const response = JSON.parse(body);
-        Object.keys(response.query.pages).forEach(pageId => {
-          const page = response.query.pages[pageId];
-          if (!(page && page.revisions && page.revisions.length)) {
-            log.error(`Invalid response : ${JSON.stringify(page)}`);
-            process.exit(1);
-          }
-          log.verbose(`${page.revisions.length} article revisions has been retrieved`);
-          revisions = revisions.concat(page.revisions);
+  log.verbose(`Retrieving article history from ${rvcontinue || 'the beginning of history'}`);
+  bot.readWithProps('Wiki Peak', ['timestamp', 'user', 'comment', 'content'].join('|'), true, {
+    qs: {
+      format: 'json',
+      rvlimit: 'max',
+      rvslots: '*',
+      rvcontinue
+    }
+  }).then((response) => {
+    Object.keys(response.query.pages).forEach(pageId => {
+      const page = response.query.pages[pageId];
+      if (!(page && page.revisions && page.revisions.length)) {
+        log.error(`Invalid response : ${JSON.stringify(page)}`);
+        process.exit(1);
+      }
+      log.verbose(`${page.revisions.length} article revisions have been retrieved`);
+      revisions = revisions.concat(page.revisions);
 
-          rvcontinue = (response.continue || {}).rvcontinue || null;
-          if (rvcontinue) {
-            log.verbose('rvcontinue detected, retrieving next revisions');
-            fetchFromApi(rvcontinue);
-          }
-          else {
-            revisions = revisions.reverse();
-            createCommitForCurrentRevision();
-          }
-        });
-      });
-  })
+      rvcontinue = (response.continue || {}).rvcontinue || null;
+      if (rvcontinue) {
+        log.verbose('rvcontinue detected, retrieving next revisions');
+        fetchFromApi(rvcontinue);
+      }
+      else {
+        revisions = revisions.reverse();
+        createCommitForCurrentRevision();
+      }
+    });
+  }).catch((err) => {
+    log.error(err);
+  });
 };
 
 promisify(fse.ensureDir)(repoPath)
@@ -143,5 +139,21 @@ promisify(fse.ensureDir)(repoPath)
   .then(repoCreated => {
     log.verbose(`Created empty repository at ${repoCreated.path()}`);
     repo = repoCreated;
-    fetchFromApi();
+
+    if (!(settings.username && settings.password)) {
+      log.info(`If you have a bot account on ${bot.options.apiUrl}, specify its credentials in settings.json to wiki-as-git faster!`);
+      fetchFromApi();
+    }
+    else {
+      bot.loginGetEditToken({
+        username: settings.username,
+        password: settings.password
+      }).then(() => {
+        log.info("Login successful. Note that logging in only allows to make wiki-as-git faster if bot credentials are used");
+        fetchFromApi();
+      }).catch((err) => {
+        log.error("Login failed. Log in with a bot account to wiki-as-git faster!");
+        fetchFromApi();
+      });
+    }
   });
