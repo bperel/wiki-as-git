@@ -6,7 +6,7 @@
   "fs-extra": "^8.1.0",
   "moment": "^2.24.0",
   "mwbot": "git://github.com:Fannon/mwbot.git#28a3c54137e5c6f6cdc84efdd25cc5e0d999f3d9",
-  "nodegit": "^0.26.0",
+  "nodegit": "^0.26.3",
   "promisify-node": "^0.5.0",
   "winston": "^3.2.1"
  },
