@@ -1,39 +1,39 @@
 {
- "name": "wiki-as-git",
- "version": "0.2.0",
- "dependencies": {
-  "argparse": "^1.0.10",
-  "fs-extra": "^8.1.0",
-  "moment": "^2.24.0",
-  "mwbot": "git://github.com:Fannon/mwbot.git#28a3c54137e5c6f6cdc84efdd25cc5e0d999f3d9",
-  "nodegit": "^0.26.0",
-  "promisify-node": "^0.5.0",
-  "winston": "^3.2.1"
- },
- "bin": {
-  "wiki-as-git": "./wiki-as-git.js"
- },
- "description": "Check a Wikipedia article's revision history using git commands",
- "main": "wiki-as-git.js",
- "devDependencies": {},
- "scripts": {
-  "test": "nodejs wiki-as-git.js \"Wiki Peak\""
- },
- "repository": {
-  "type": "git",
-  "url": "git+https://github.com/bperel/wiki-as-git.git"
- },
- "keywords": [
-  "wikipedia",
-  "git"
- ],
- "engines": {
-  "node": "^10.0.0"
- },
- "author": "Bruno Perel",
- "license": "Apache-2.0",
- "bugs": {
-  "url": "https://github.com/bperel/wiki-as-git/issues"
- },
- "homepage": "https://github.com/bperel/wiki-as-git#readme"
+  "name": "wiki-as-git",
+  "version": "0.2.0",
+  "dependencies": {
+    "argparse": "^1.0.10",
+    "fs-extra": "^8.1.0",
+    "moment": "^2.24.0",
+    "mwbot": "git://github.com/Fannon/mwbot.git#28a3c54137e5c6f6cdc84efdd25cc5e0d999f3d9",
+    "nodegit": "^0.26.5",
+    "promisify-node": "^0.5.0",
+    "winston": "^3.2.1"
+  },
+  "bin": {
+    "wiki-as-git": "./wiki-as-git.js"
+  },
+  "description": "Check a Wikipedia article's revision history using git commands",
+  "main": "wiki-as-git.js",
+  "devDependencies": {},
+  "scripts": {
+    "test": "nodejs wiki-as-git.js \"Wiki Peak\""
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/bperel/wiki-as-git.git"
+  },
+  "keywords": [
+    "wikipedia",
+    "git"
+  ],
+  "engines": {
+    "node": "^10.0.0"
+  },
+  "author": "Bruno Perel",
+  "license": "Apache-2.0",
+  "bugs": {
+    "url": "https://github.com/bperel/wiki-as-git/issues"
+  },
+  "homepage": "https://github.com/bperel/wiki-as-git#readme"
 }
