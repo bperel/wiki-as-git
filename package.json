@@ -3,7 +3,7 @@
   "version": "0.2.0",
   "dependencies": {
     "argparse": "^1.0.10",
-    "fs-extra": "^8.1.0",
+    "fs-extra": "^9.0.0",
     "moment": "^2.24.0",
     "mwbot": "git://github.com/Fannon/mwbot.git#28a3c54137e5c6f6cdc84efdd25cc5e0d999f3d9",
     "nodegit": "^0.26.5",
