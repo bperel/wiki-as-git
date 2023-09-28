@@ -6,14 +6,26 @@ An easy way to check the revision history of a Wikipedia article using Git comma
 
 # Install
 
-* You can run wiki-as-git using our Docker image :
-`docker run --rm -it -v $(pwd)/articles:/home/wiki-as-git/articles bperel/wiki-as-git "Hello world"`
+* You can run wiki-as-git using our Docker image, see Usage.
 
-* Or you can install it manually : `npm install`
+* Or you can install its dependencies manually : `npm install`
 
 ## Usage
 
-`wiki-as-git.js [--language=en] "<Article name>"`
+### With Docker, using a pre-built image
+
+`docker run --rm -it -v $(pwd)/articles:/home/wiki-as-git/articles bperel/wiki-as-git '<Article name>'`
+
+Example:
+`docker run --rm -it -v $(pwd)/articles:/home/wiki-as-git/articles bperel/wiki-as-git '"Hello, World!" program'`
+
+### Without Docker
+
+`npx ts-node wiki-as-git.ts [--language=en] '<Article name>'`
+
+Example:
+`npx ts-node wiki-as-git.ts '"Hello, World!" program'`
+
 
 If you have bot credentials for the wiki that you wish to target, copy-paste `settings.example.json` into a file named `settings.json` and fill in the bot's credentials.
 This will lift some limits of the Mediawiki API and make wiki-as-git much faster.

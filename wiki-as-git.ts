@@ -1,7 +1,6 @@
 import { Mwn, ApiRevision } from "mwn";
 import { resolve, join } from "path";
 import * as fs from "fs";
-import { createLogger, transports as _transports } from "winston";
 import git from "isomorphic-git";
 
 import { ArgumentParser } from "argparse";
@@ -25,22 +24,13 @@ argparser.add_argument("--language", {
   help: "The Wikipedia language version to use (ex: en, fr, etc.)",
 });
 argparser.add_argument("-vvv", { help: "Verbose log", action: "store_true" });
-argparser.add_argument("articleName", { type: 'string', nargs: 1, help: "The name of the article to retrieve" });
+argparser.add_argument("articleName", { type: 'str', nargs: 1, help: "The name of the article to retrieve" });
 
 const args = argparser.parse_args();
 
 const defaults = {
   commitMessageLength: 100,
-  logLevel: "info",
 };
-
-const log = createLogger({
-  transports: [
-    new _transports.Console({
-      level: args.vvv ? "verbose" : defaults.logLevel,
-    }),
-  ],
-});
 
 const fileName = `${args.articleName}.wiki`;
 const repoDir = `./${args.language}.wikipedia.org/${args.articleName}`;
@@ -48,7 +38,7 @@ const dir = resolve(__dirname, "articles", repoDir);
 
 let revisions: ApiRevision[] = [];
 
-log.verbose("Cleaning previous local repository if existing");
+console.debug("Cleaning previous local repository if existing");
 fs.rmSync(dir, { recursive: true, force: true });
 
 const bot = new Mwn({
@@ -56,9 +46,15 @@ const bot = new Mwn({
 });
 
 const createCommitForCurrentRevision = async (revision: ApiRevision) => {
-  log.verbose(`Creating commit for revision from ${revision.timestamp}`);
+  console.debug(`Creating commit for revision from ${revision.timestamp}`);
 
-  const fileContent = revision.content;
+  const fileContent = revision.slots.main.content;
+
+  if (fileContent === undefined) {
+    console.debug("No content for this revision, skipping");
+    return;
+  }
+  
   const message = (revision.comment || "").substr(
     0,
     defaults.commitMessageLength,
@@ -80,7 +76,7 @@ const createCommitForCurrentRevision = async (revision: ApiRevision) => {
 
 };
 const fetchFromApi = async (rvcontinue?: number) => {
-  log.verbose(
+  console.debug(
     `Retrieving article history from ${rvcontinue || "the beginning of history"
     }`,
   );
@@ -88,7 +84,7 @@ const fetchFromApi = async (rvcontinue?: number) => {
     for await (const newRevisions of new bot.Page(args.articleName[0]).historyGen(["timestamp", "user", "comment", "content"], {
       redirects: true,
       format: "json",
-      rvslots: ["main"],
+      rvslots: 'main',
       rvlimit: "max",
     })) {
       revisions = revisions.concat(newRevisions);
@@ -99,7 +95,7 @@ const fetchFromApi = async (rvcontinue?: number) => {
     }
   }
   catch (err) {
-    log.error(err);
+    console.error(err);
   }
 };
 
@@ -107,11 +103,11 @@ const fetchFromApi = async (rvcontinue?: number) => {
   fs.mkdirSync(dir, { recursive: true });
   await git.init({ fs, dir: dir })
 
-  log.verbose(`Created empty repository at ${dir}`);
+  console.debug(`Created empty repository at ${dir}`);
 
   await bot.getSiteInfo()
   if (!(settings.username && settings.password)) {
-    log.info(
+    console.info(
       `If you have a bot account on ${bot.options.apiUrl}, specify its credentials in settings.json to wiki-as-git faster!`,
     );
     await fetchFromApi();
@@ -122,12 +118,12 @@ const fetchFromApi = async (rvcontinue?: number) => {
           username: settings.username,
           password: settings.password,
         })
-      log.info(
+      console.info(
         "Login successful. Note that logging in only allows to make wiki-as-git faster if bot credentials are used",
       );
     }
     catch (e) {
-      log.error(
+      console.error(
         "Login failed. Log in with a bot account to make wiki-as-git faster!",
       );
     }

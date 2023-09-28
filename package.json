@@ -5,8 +5,7 @@
     "argparse": "^2.0.1",
     "dayjs": "^1.11.10",
     "isomorphic-git": "^1.24.5",
-    "mwn": "^2.0.0",
-    "winston": "^3.2.1"
+    "mwn": "^2.0.0"
   },
   "devDependencies": {
     "@babel/eslint-parser": "^7.22.15",
@@ -18,12 +17,13 @@
     "eslint-config-prettier": "^9.0.0",
     "eslint-plugin-prettier": "^5.0.0",
     "prettier": "3.0.3",
+    "ts-node": "^10.9.1",
     "typescript": "^5.2.2"
   },
   "description": "Check a Wikipedia article's revision history using git commands",
   "main": "wiki-as-git.ts",
   "scripts": {
-    "test": "npx ts-node wiki-as-git.ts -vvv \"Gary, Indiana\""
+    "test": "ts-node wiki-as-git.ts -vvv \"Hello world\""
   },
   "repository": {
     "type": "git",
