@@ -36,16 +36,14 @@ const fileName = `${args.articleName}.wiki`;
 const repoDir = `./${args.language}.wikipedia.org/${args.articleName}`;
 const dir = resolve(__dirname, "articles", repoDir);
 
-let revisions: ApiRevision[] = [];
-
 console.debug("Cleaning previous local repository if existing");
 fs.rmSync(dir, { recursive: true, force: true });
 
-const bot = new Mwn({
+const mwn = new Mwn({
   apiUrl: `https://${args.language}.wikipedia.org/w/api.php`,
 });
 
-const createCommitForCurrentRevision = async (revision: ApiRevision) => {
+const createCommitForRevision = async (revision: ApiRevision) => {
   console.debug(`Creating commit for revision from ${revision.timestamp}`);
 
   const fileContent = revision.slots.main.content;
@@ -55,7 +53,7 @@ const createCommitForCurrentRevision = async (revision: ApiRevision) => {
     return;
   }
   
-  const message = (revision.comment || "").substr(
+  const message = (revision.comment || "").substring(
     0,
     defaults.commitMessageLength,
   );
@@ -72,7 +70,7 @@ const createCommitForCurrentRevision = async (revision: ApiRevision) => {
   };
   const author = committer
 
-  git.commit({ fs, dir: dir, message, committer, author })
+  await git.commit({ fs, dir, message, committer, author })
 
 };
 const fetchFromApi = async (rvcontinue?: number) => {
@@ -81,17 +79,14 @@ const fetchFromApi = async (rvcontinue?: number) => {
     }`,
   );
   try {
-    for await (const newRevisions of new bot.Page(args.articleName[0]).historyGen(["timestamp", "user", "comment", "content"], {
+    for await (const revision of new mwn.Page(args.articleName[0]).historyGen(["timestamp", "user", "comment", "content"], {
       redirects: true,
       format: "json",
       rvslots: 'main',
       rvlimit: "max",
+      rvdir: "newer",
     })) {
-      revisions = revisions.concat(newRevisions);
-    }
-    revisions = revisions.reverse();
-    for (const revision of revisions) {
-      createCommitForCurrentRevision(revision);
+      await createCommitForRevision(revision);
     }
   }
   catch (err) {
@@ -105,15 +100,15 @@ const fetchFromApi = async (rvcontinue?: number) => {
 
   console.debug(`Created empty repository at ${dir}`);
 
-  await bot.getSiteInfo()
+  await mwn.getSiteInfo()
   if (!(settings.username && settings.password)) {
     console.info(
-      `If you have a bot account on ${bot.options.apiUrl}, specify its credentials in settings.json to wiki-as-git faster!`,
+      `If you have a bot account on ${mwn.options.apiUrl}, specify its credentials in settings.json to wiki-as-git faster!`,
     );
     await fetchFromApi();
   } else {
     try {
-      await bot
+      await mwn
         .login({
           username: settings.username,
           password: settings.password,
