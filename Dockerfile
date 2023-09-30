@@ -1,9 +1,9 @@
-FROM node:10-buster-slim
+FROM node:16-slim
 
 WORKDIR /home/wiki-as-git
-COPY package.json package-lock.json wiki-as-git.js ./
+COPY package.json package-lock.json tsconfig.json wiki-as-git.ts ./
 
-RUN apt-get update && apt-get install -y --no-install-recommends libgit2-dev git && apt-get clean \
- && npm rebuild && npm install
+RUN apt-get update && apt-get install -y --no-install-recommends git && apt-get clean
+RUN npm install
 
-ENTRYPOINT ["/home/wiki-as-git/wiki-as-git.js"]
+ENTRYPOINT ["./node_modules/.bin/ts-node", "wiki-as-git.ts"]
