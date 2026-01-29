@@ -1,12 +1,15 @@
 {
   "compilerOptions": {
-    "outDir": "dist",
     "target": "ES2020",
-    "module": "CommonJS",
+    "module": "ESNext",
+    "moduleResolution": "bundler",
     "noImplicitAny": true,
-    "esModuleInterop": true
+    "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true,
+    "strict": true,
+    "skipLibCheck": true
   },
   "include": [
-    "wiki-as-git.js"
+    "*.ts"
   ]
 }

@@ -46,17 +46,15 @@ const mwn = new Mwn({
 const createCommitForRevision = async (revision: ApiRevision) => {
   console.debug(`Creating commit for revision from ${revision.timestamp}`);
 
-  const fileContent = revision.slots.main.content;
+  const fileContent = revision.slots!.main.content;
 
   if (fileContent === undefined) {
     console.debug("No content for this revision, skipping");
     return;
   }
   
-  const message = (revision.comment || "").substring(
-    0,
-    defaults.commitMessageLength,
-  );
+  const rawMessage = revision.comment || "";
+  const message = rawMessage.substring(0, defaults.commitMessageLength) || "\n";
   const username = revision.user || "[Deleted user]";
   const date = revision.timestamp;
 

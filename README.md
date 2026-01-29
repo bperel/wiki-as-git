@@ -6,9 +6,9 @@ An easy way to check the revision history of a Wikipedia article using Git comma
 
 # Install
 
-* You can run wiki-as-git using our Docker image, see Usage.
+- You can run wiki-as-git using our Docker image, see Usage.
 
-* Or you can install its dependencies manually : `npm install`
+- Or you can install its dependencies manually : `bun install`
 
 ## Usage
 
@@ -21,11 +21,10 @@ Example:
 
 ### Without Docker
 
-`npx ts-node wiki-as-git.ts [--language=en] '<Article name>'`
+`bun run wiki-as-git.ts [--language=en] '<Article name>'`
 
 Example:
-`npx ts-node wiki-as-git.ts '"Hello, World!" program'`
-
+`bun run wiki-as-git.ts '"Hello, World!" program'`
 
 If you have bot credentials for the wiki that you wish to target, copy-paste `settings.example.json` into a file named `settings.json` and fill in the bot's credentials.
 This will lift some limits of the Mediawiki API and make wiki-as-git much faster.
