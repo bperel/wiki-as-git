@@ -4,6 +4,7 @@
   "dependencies": {
     "argparse": "^2.0.1",
     "dayjs": "^1.11.19",
+    "fast-xml-parser": "^5.3.3",
     "isomorphic-git": "^1.36.3",
     "mwn": "^3.0.1"
   },
