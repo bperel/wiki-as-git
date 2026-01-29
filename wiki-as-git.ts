@@ -1,5 +1,5 @@
 import { Mwn, ApiRevision } from "mwn";
-import { join } from "path";
+import { join, resolve } from "path";
 import * as fs from "fs";
 import git from "isomorphic-git";
 import { ArgumentParser } from "argparse";
@@ -33,14 +33,21 @@ export const isXmlRevision = (
   revision: ApiRevision | XmlRevision,
 ): revision is XmlRevision => "text" in revision;
 
-export const createCommitForRevision = async <IsXml extends boolean>(
-  revision: IsXml extends true ? XmlRevision : ApiRevision,
+export interface RevisionWithArticle {
+  revision: ApiRevision | XmlRevision;
+  articleName: string;
+  isXml: boolean;
+}
+
+export const createCommitForRevision = async (
+  revisionData: RevisionWithArticle,
   dir: string,
-  fileName: string,
   language: string,
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  _isXml: IsXml,
 ) => {
+  const { revision, articleName } = revisionData;
+  const sanitizedName = sanitizeArticleName(articleName);
+  const fileName = `${sanitizedName}.wiki`;
+
   let fileContent: string | undefined;
   let username: string;
   const timestamp = revision.timestamp;
@@ -65,7 +72,7 @@ export const createCommitForRevision = async <IsXml extends boolean>(
   }
 
   const message = rawMessage.substring(0, defaults.commitMessageLength) || "\n";
-  console.debug(`Creating commit for revision from ${timestamp}`);
+  console.debug(`Creating commit for ${articleName} from ${timestamp}`);
 
   fs.writeFileSync(join(dir, fileName), fileContent);
   await git.add({ fs, dir, filepath: fileName });
@@ -78,6 +85,20 @@ export const createCommitForRevision = async <IsXml extends boolean>(
   const author = committer;
 
   await git.commit({ fs, dir, message, committer, author });
+};
+
+export const getRepoDir = (language: string) =>
+  resolve(__dirname, "articles", `${language}.wikipedia.org`);
+
+export const ensureRepoInitialized = async (dir: string) => {
+  if (!fs.existsSync(dir)) {
+    fs.mkdirSync(dir, { recursive: true });
+    await git.init({ fs, dir });
+    console.debug(`Initialized repository at ${dir}`);
+  } else if (!fs.existsSync(join(dir, ".git"))) {
+    await git.init({ fs, dir });
+    console.debug(`Initialized repository at ${dir}`);
+  }
 };
 
 let settings: Record<string, string>;
@@ -108,51 +129,49 @@ argparser.add_argument("articleName", {
 
 const args = argparser.parse_args();
 
-(async () => {
-  if (args.xml_dump) {
-    const xmlPath = Array.isArray(args.xml_dump)
-      ? args.xml_dump[0]
-      : args.xml_dump;
-    await processXmlDump(xmlPath);
+if (args.xml_dump) {
+  const xmlPath = Array.isArray(args.xml_dump)
+    ? args.xml_dump[0]
+    : args.xml_dump;
+  await processXmlDump(xmlPath);
+} else {
+  if (!args.articleName) {
+    console.error("Error: articleName is required when not using --xml-dump");
+    process.exit(1);
+  }
+
+  const articleName = Array.isArray(args.articleName)
+    ? args.articleName[0]
+    : args.articleName;
+  const language = Array.isArray(args.language)
+    ? args.language[0]
+    : args.language || "en";
+
+  const mwn = new Mwn({
+    apiUrl: `https://${language}.wikipedia.org/w/api.php`,
+  });
+
+  await mwn.getSiteInfo();
+  if (!(settings.username && settings.password)) {
+    console.info(
+      `If you have a bot account on ${mwn.options.apiUrl}, specify its credentials in settings.json to wiki-as-git faster!`,
+    );
+    await fetchFromApi(articleName, language);
   } else {
-    if (!args.articleName) {
-      console.error("Error: articleName is required when not using --xml-dump");
-      process.exit(1);
-    }
-
-    const articleName = Array.isArray(args.articleName)
-      ? args.articleName[0]
-      : args.articleName;
-    const language = Array.isArray(args.language)
-      ? args.language[0]
-      : args.language || "en";
-
-    const mwn = new Mwn({
-      apiUrl: `https://${language}.wikipedia.org/w/api.php`,
-    });
-
-    await mwn.getSiteInfo();
-    if (!(settings.username && settings.password)) {
+    try {
+      await mwn.login({
+        username: settings.username,
+        password: settings.password,
+      });
       console.info(
-        `If you have a bot account on ${mwn.options.apiUrl}, specify its credentials in settings.json to wiki-as-git faster!`,
+        "Login successful. Note that logging in only allows to make wiki-as-git faster if bot credentials are used",
       );
+    } catch (e) {
+      console.error(
+        "Login failed. Log in with a bot account to make wiki-as-git faster!",
+      );
+    } finally {
       await fetchFromApi(articleName, language);
-    } else {
-      try {
-        await mwn.login({
-          username: settings.username,
-          password: settings.password,
-        });
-        console.info(
-          "Login successful. Note that logging in only allows to make wiki-as-git faster if bot credentials are used",
-        );
-      } catch (e) {
-        console.error(
-          "Login failed. Log in with a bot account to make wiki-as-git faster!",
-        );
-      } finally {
-        await fetchFromApi(articleName, language);
-      }
     }
   }
-})();
+}

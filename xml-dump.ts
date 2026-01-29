@@ -1,4 +1,3 @@
-import { resolve } from "path";
 import * as fs from "fs";
 import git from "isomorphic-git";
 import { XMLParser } from "fast-xml-parser";
@@ -6,7 +5,7 @@ import dayjs from "dayjs";
 import {
   XmlRevision,
   createCommitForRevision,
-  sanitizeArticleName,
+  getRepoDir,
 } from "./wiki-as-git";
 
 export interface XmlPage {
@@ -68,55 +67,64 @@ export const processXmlDump = async (xmlPath: string) => {
 
   console.info(`Found ${pages.length} pages in dump`);
 
+  const dir = getRepoDir(language);
+
+  console.info(`Replacing Git repository at ${dir}`);
+  fs.rmSync(dir, { recursive: true, force: true });
+  fs.mkdirSync(dir, { recursive: true });
+  await git.init({ fs, dir });
+
+  console.debug(`Created empty repository at ${dir}`);
+
+  const allRevisions: Array<{
+    revision: XmlRevision;
+    articleName: string;
+  }> = [];
+
   for (const page of pages) {
     const articleName = page.title;
-    const sanitizedName = sanitizeArticleName(articleName);
-    const fileName = `${sanitizedName}.wiki`;
-    const repoDir = `./${language}.wikipedia.org/${sanitizedName}`;
-    const dir = resolve(__dirname, "articles", repoDir);
+    const revisions = Array.isArray(page.revision)
+      ? page.revision
+      : page.revision
+      ? [page.revision]
+      : [];
 
-    console.info(`Processing article: ${articleName}`);
+    if (revisions.length === 0) {
+      console.warn(
+        `No revisions found for article: ${articleName}, skipping`,
+      );
+      continue;
+    }
 
+    for (const revision of revisions) {
+      allRevisions.push({ revision, articleName });
+    }
+  }
+
+  console.info(
+    `Collected ${allRevisions.length} revisions from ${pages.length} articles`,
+  );
+
+  allRevisions.sort((a, b) => {
+    const dateA = dayjs(a.revision.timestamp).unix();
+    const dateB = dayjs(b.revision.timestamp).unix();
+    return dateA - dateB;
+  });
+
+  console.info(`Processing revisions chronologically...`);
+
+  for (const { revision, articleName } of allRevisions) {
     try {
-      console.debug(
-        `Cleaning previous local repository if existing for ${articleName}`,
+      await createCommitForRevision(
+        { revision, articleName, isXml: true },
+        dir,
+        language,
       );
-      fs.rmSync(dir, { recursive: true, force: true });
-      fs.mkdirSync(dir, { recursive: true });
-      await git.init({ fs, dir: dir });
-
-      console.debug(`Created empty repository at ${dir}`);
-
-      const revisions = Array.isArray(page.revision)
-        ? page.revision
-        : page.revision
-        ? [page.revision]
-        : [];
-
-      if (revisions.length === 0) {
-        console.warn(
-          `No revisions found for article: ${articleName}, skipping`,
-        );
-        continue;
-      }
-
-      revisions.sort((a, b) => {
-        const dateA = dayjs(a.timestamp).unix();
-        const dateB = dayjs(b.timestamp).unix();
-        return dateA - dateB;
-      });
-
-      console.info(
-        `Processing ${revisions.length} revisions for ${articleName}`,
-      );
-
-      for (const revision of revisions) {
-        await createCommitForRevision(revision, dir, fileName, language, true);
-      }
-
-      console.info(`Completed processing ${articleName}`);
     } catch (error) {
-      console.error(`Error processing article ${articleName}:`, error);
+      console.error(
+        `Error processing revision for article ${articleName}:`,
+        error,
+      );
     }
   }
 
