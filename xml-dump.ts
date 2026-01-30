@@ -1,4 +1,6 @@
 import * as fs from "fs";
+// @ts-expect-error - seek-bzip doesn't have TypeScript types
+import * as seekBzip from "seek-bzip";
 import git from "isomorphic-git";
 import { XMLParser } from "fast-xml-parser";
 import dayjs from "dayjs";
@@ -28,7 +30,18 @@ export interface XmlDump {
 
 export const parseXmlDump = async (xmlPath: string) => {
   console.debug(`Reading XML dump from ${xmlPath}`);
-  const xmlContent = fs.readFileSync(xmlPath, "utf-8");
+
+  const isBzip2 = xmlPath.endsWith(".bz2");
+  let xmlContent: string;
+
+  if (isBzip2) {
+    console.debug("Decompressing bzip2-compressed XML dump");
+    const compressed = fs.readFileSync(xmlPath);
+    const decompressed = seekBzip.decode(compressed);
+    xmlContent = Buffer.from(decompressed).toString("utf-8");
+  } else {
+    xmlContent = fs.readFileSync(xmlPath, "utf-8");
+  }
 
   const parser = new XMLParser({
     ignoreAttributes: false,
@@ -90,9 +103,7 @@ export const processXmlDump = async (xmlPath: string) => {
       : [];
 
     if (revisions.length === 0) {
-      console.warn(
-        `No revisions found for article: ${articleName}, skipping`,
-      );
+      console.warn(`No revisions found for article: ${articleName}, skipping`);
       continue;
     }
 
