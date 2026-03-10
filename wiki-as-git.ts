@@ -43,6 +43,7 @@ export const createCommitForRevision = async (
   revisionData: RevisionWithArticle,
   dir: string,
   language: string,
+  vvv?: boolean,
 ) => {
   const { revision, articleName } = revisionData;
   const sanitizedName = sanitizeArticleName(articleName);
@@ -62,17 +63,23 @@ export const createCommitForRevision = async (
   }
 
   if (!timestamp) {
-    console.debug("No date for this revision, skipping");
+    if (vvv) {
+      console.debug("No date for this revision, skipping");
+    }
     return;
   }
 
   if (!fileContent || typeof fileContent !== "string") {
-    console.debug("No valid content for this revision, skipping");
+    if (vvv) {
+      console.debug("No valid content for this revision, skipping");
+    }
     return;
   }
 
   const message = rawMessage.substring(0, defaults.commitMessageLength) || "\n";
-  console.debug(`Creating commit for ${articleName} from ${timestamp}`);
+  if (vvv) {
+    console.debug(`Creating commit for ${articleName} from ${timestamp}`);
+  }
 
   fs.writeFileSync(join(dir, fileName), fileContent);
   await git.add({ fs, dir, filepath: fileName });
@@ -127,7 +134,12 @@ argparser.add_argument("articleName", {
   help: "The name of the article to retrieve (required when not using --xml-dump)",
 });
 
-const args = argparser.parse_args();
+const args = argparser.parse_args() as {
+  language: string;
+  xml_dump: string;
+  articleName: string;
+  vvv: boolean;
+};
 
 if (args.xml_dump) {
   const xmlPath = Array.isArray(args.xml_dump)
@@ -171,7 +183,7 @@ if (args.xml_dump) {
         "Login failed. Log in with a bot account to make wiki-as-git faster!",
       );
     } finally {
-      await fetchFromApi(articleName, language);
+      await fetchFromApi(articleName, language, undefined, args.vvv);
     }
   }
 }

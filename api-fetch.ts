@@ -34,6 +34,7 @@ const rebuildRepoWithMergedHistory = async (
   dir: string,
   language: string,
   newRevisions: RevisionWithArticle[],
+  vvv?: boolean,
 ) => {
   console.debug(
     `Rebuilding repository with ${newRevisions.length} new revisions`,
@@ -94,7 +95,7 @@ const rebuildRepoWithMergedHistory = async (
         }
       }
 
-      await createCommitForRevision(revisionData, dir, language);
+      await createCommitForRevision(revisionData, dir, language, vvv);
     } catch (error) {
       console.error(
         `Error processing revision for article ${revisionData.articleName}:`,
@@ -108,6 +109,7 @@ export const fetchFromApi = async (
   articleName: string,
   language: string,
   rvcontinue?: number,
+  vvv?: boolean,
 ) => {
   const dir = getRepoDir(language);
   await ensureRepoInitialized(dir);
@@ -118,7 +120,7 @@ export const fetchFromApi = async (
 
   await mwn.getSiteInfo();
 
-  console.debug(
+  console.info(
     `Retrieving article history for ${articleName} from ${
       rvcontinue || "the beginning of history"
     }`,
@@ -150,6 +152,6 @@ export const fetchFromApi = async (
   console.info(`Fetched ${newRevisions.length} revisions for ${articleName}`);
 
   if (newRevisions.length > 0) {
-    await rebuildRepoWithMergedHistory(dir, language, newRevisions);
+    await rebuildRepoWithMergedHistory(dir, language, newRevisions, vvv);
   }
 };
