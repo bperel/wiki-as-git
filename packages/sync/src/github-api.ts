@@ -236,10 +236,11 @@ export async function pushCommitHistory(
       },
       config,
     );
-  }
-
-  if (parentSha) {
-    await updateRef(ref, parentSha, config);
+    // Update ref after each commit so the next can reference it (GitHub returns
+    // "Git Repository is empty" when fetching unreferenced commits)
+    if (parentSha) {
+      await updateRef(ref, parentSha, config);
+    }
   }
 
   return parentSha ?? "";
