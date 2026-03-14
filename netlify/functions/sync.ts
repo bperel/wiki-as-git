@@ -35,11 +35,12 @@ export const handler: Handler = async (
     return { statusCode: 400, body: JSON.stringify({ error: "Missing path in body" }), headers };
   }
 
-  console.log(`[${new Date().toISOString()}] sync: start path=${path}`);
+  const owner = process.env.GITHUB_OWNER ?? "wiki-as-git";
+  console.log(`[${new Date().toISOString()}] sync: start path=${path} owner=${owner}`);
   const result = await syncArticleToGitHub(
     path.startsWith("/") ? path : `/${path}`,
     {
-      owner: "wiki-as-git",
+      owner,
       token,
       branch: "master",
     },

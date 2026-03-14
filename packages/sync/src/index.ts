@@ -112,6 +112,7 @@ export async function syncArticleToGitHub(
     };
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
+    console.error(`[${new Date().toISOString()}] sync: error`, message);
     return { success: false, error: message };
   }
 }
