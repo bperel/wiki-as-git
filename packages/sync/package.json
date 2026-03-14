@@ -11,13 +11,17 @@
     }
   },
   "scripts": {
-    "build": "tsc"
+    "build": "tsc",
+    "run:local": "node run-local.js"
   },
   "dependencies": {
-    "core": "workspace:*"
+    "core": "workspace:*",
+    "dayjs": "^1.11.19",
+    "isomorphic-git": "^1.36.3"
   },
   "devDependencies": {
     "@types/node": "^20.7.0",
+    "dotenv": "^16.4.5",
     "typescript": "^5.2.2"
   },
   "description": "Wikipedia + GitHub sync logic for Netlify Functions"

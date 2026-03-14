@@ -55,7 +55,7 @@ The frontend (`packages/browser`) and sync logic (`packages/sync`) are separate:
 - **browser**: Static frontend that calls the sync API. Deployed to Netlify CDN.
 - **sync**: Wikipedia + GitHub logic. Runs as a Netlify Function (serverless). Token is stored in env, not exposed to clients.
 
-When a visitor goes to `/en.wikipedia.org/blob/master/Game Boy.wiki`:
+When a visitor goes to `/en.wikipedia.org/Game Boy`:
 
 1. The frontend calls `POST /.netlify/functions/sync` with the path
 2. The sync function fetches revisions from Wikipedia, creates commits, pushes to GitHub
@@ -73,4 +73,18 @@ When a visitor goes to `/en.wikipedia.org/blob/master/Game Boy.wiki`:
 pnpm run dev:browser
 ```
 
-Serves the frontend at http://localhost:3000. For full testing (including sync), use `netlify dev` so the function runs locally.
+Builds the demo and runs Netlify Dev at http://localhost:3000. This serves the frontend and runs the sync function locally. Set `GITHUB_TOKEN` and `GITHUB_OWNER` in a `.env` file at the project root (see `.env.example`).
+
+For a full build first: `pnpm run dev` (uses port 8888).
+
+### Run sync locally
+
+To debug the sync logic without deploying:
+
+```bash
+# 1. Add your token to packages/sync/.env:
+#    GITHUB_TOKEN=ghp_your_token_here
+
+# 2. Run sync
+pnpm run sync:local "/fr.wikipedia.org/Game Boy"
+```

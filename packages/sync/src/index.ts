@@ -5,12 +5,8 @@
 
 import { getCommitMetadata, sanitizeArticleName, parseWikiAsGitPath } from "core";
 import { fetchArticleRevisions } from "./wikipedia-api.js";
-import {
-  ensureRepoExists,
-  listCommitsForPath,
-  pushCommitHistory,
-  type GitHubConfig,
-} from "./github-api.js";
+import { ensureRepoExists, type GitHubConfig } from "./github-api.js";
+import { pushViaGit } from "./git-push.js";
 
 export interface SyncResult {
   success: boolean;
@@ -82,28 +78,14 @@ export async function syncArticleToGitHub(
     console.log(`[${new Date().toISOString()}] sync: ensuring repo exists`);
     await ensureRepoExists(config);
 
-    console.log(`[${new Date().toISOString()}] sync: listing existing commits`);
-    const existing = await listCommitsForPath(config, fileName);
-    const existingKeys = new Set(
-      existing.map((c) => `${c.date}:${c.message.substring(0, 100)}`),
-    );
-    const commits = allCommits.filter(
-      (c) => !existingKeys.has(`${c.timestamp}:${c.message}`),
-    );
-
-    if (commits.length === 0 && allCommits.length > 0) {
-      return {
-        success: true,
-        repoUrl: `https://github.com/${config.owner}/${config.repo}/blob/${config.branch}/${encodeURIComponent(fileName)}`,
-      };
-    }
-
-    if (commits.length === 0) {
+    if (allCommits.length === 0) {
       return { success: false, error: "No valid revisions to commit" };
     }
 
-    console.log(`[${new Date().toISOString()}] sync: pushing ${commits.length} commits to GitHub`);
-    await pushCommitHistory(commits, config);
+    console.log(
+      `[${new Date().toISOString()}] sync: pushing ${allCommits.length} commits via git push`,
+    );
+    await pushViaGit(allCommits, config);
     console.log(`[${new Date().toISOString()}] sync: push complete`);
 
     return {

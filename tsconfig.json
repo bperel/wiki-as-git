@@ -8,5 +8,5 @@
     "noEmit": true,
     "types": ["node"]
   },
-  "include": ["./netlify/functions/sync.ts"]
+  "include": ["./netlify/functions/sync.mts"]
 }

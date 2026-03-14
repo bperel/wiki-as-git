@@ -1,5 +1,6 @@
 .DS_Store
 .env
+packages/sync/.env
 .eslintcache
 .grunt
 .idea
@@ -26,3 +27,5 @@ settings.json
 typings/
 yarn-debug.log*
 yarn-error.log*
+# Local Netlify folder
+.netlify

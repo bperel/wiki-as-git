@@ -6,7 +6,6 @@
   <title>wiki-as-git browser</title>
   <style>
     body { font-family: system-ui, sans-serif; max-width: 600px; margin: 2rem auto; padding: 0 1rem; }
-    input, button { font-size: 1rem; padding: 0.5rem; }
     #status { margin-top: 1rem; padding: 0.5rem; border-radius: 4px; }
     .success { background: #d4edda; }
     .error { background: #f8d7da; }
@@ -15,15 +14,6 @@
 </head>
 <body>
   <h1>wiki-as-git browser</h1>
-  <p>
-    Visit a path like <code>/en.wikipedia.org/blob/master/Game Boy.wiki</code> to sync
-    that Wikipedia article's history to GitHub.
-  </p>
-  <p>
-    <label for="path">Path (or use current):</label><br />
-    <input id="path" type="text" value="/en.wikipedia.org/blob/master/Game Boy.wiki" style="width: 100%;" />
-  </p>
-  <button id="sync">Sync to GitHub</button>
   <div id="status"></div>
 
   <script src="/dist/bundle.js"></script>

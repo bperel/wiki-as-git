@@ -61,7 +61,7 @@ export async function ensureRepoExists(config: GitHubConfig): Promise<void> {
   const body = {
     name: repo,
     private: false,
-    auto_init: true, // Creates initial commit + master ref; avoids "Git Repository is empty"
+    auto_init: false, // We push full history via git push; no initial commit needed
     description: "Wikipedia articles as Git history",
   };
   const orgRes = await ghFetch(`/orgs/${owner}`, token);
@@ -147,10 +147,15 @@ async function getRefSha(ref: string, config: GitHubConfig): Promise<string | nu
   return data.object?.sha ?? null;
 }
 
-async function updateRef(ref: string, sha: string, config: GitHubConfig): Promise<void> {
+async function updateRef(
+  ref: string,
+  sha: string,
+  config: GitHubConfig,
+  refExists?: boolean,
+): Promise<void> {
   const { owner, repo, token } = config;
-  const exists = await getRefSha(ref, config);
-  if (exists !== null) {
+  const exists = refExists ?? (await getRefSha(ref, config)) !== null;
+  if (exists) {
     await ghJson(`/repos/${owner}/${repo}/git/refs/${ref}`, token, {
       method: "PATCH",
       body: JSON.stringify({ sha, force: true }),
@@ -255,6 +260,7 @@ export async function pushCommitHistory(
     commits = commits.slice(1);
   }
 
+  let refExists = parentSha !== null; // After bootstrap or existing repo, ref exists
   for (let i = 0; i < commits.length; i++) {
     const c = commits[i];
     const done = i + 1 + (bootstrapped ? 1 : 0);
@@ -284,7 +290,8 @@ export async function pushCommitHistory(
     // Update ref after each commit so the next can reference it (GitHub returns
     // "Git Repository is empty" when fetching unreferenced commits)
     if (parentSha) {
-      await updateRef(ref, parentSha, config);
+      await updateRef(ref, parentSha, config, refExists);
+      refExists = true; // Skip getRefSha check for subsequent commits
     }
   }
 

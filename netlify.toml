@@ -3,7 +3,7 @@
   publish = "packages/browser/demo"
   functions = "netlify/functions"
 
-# SPA: serve index.html for unmatched routes (e.g. /en.wikipedia.org/blob/master/Game Boy.wiki)
+# SPA: serve index.html for unmatched routes (e.g. /en.wikipedia.org/Game Boy)
 [[redirects]]
   from = "/*"
   to = "/index.html"

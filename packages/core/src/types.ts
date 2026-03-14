@@ -72,18 +72,18 @@ export interface ParsedPath {
 }
 
 /**
- * Parse a path like "en.wikipedia.org/blob/master/Game Boy.wiki"
- * into language, article name, and repo name.
+ * Parse a path into language, article name, and repo name.
+ * Format: /fr.wikipedia.org/Game Boy (no blob/master, no .wiki)
  */
 export function parseWikiAsGitPath(pathname: string): ParsedPath | null {
   const match = pathname.match(
-    /^\/?([a-z]{2,})\.wikipedia\.org\/blob\/(?:[^/]+)\/(.+)\.wiki$/i,
+    /^\/?([a-z]{2,})\.wikipedia\.org\/(.+)$/i,
   );
   if (!match) return null;
 
   const [, lang, filePart] = match;
-  const articleName = decodeURIComponent(filePart).replace(/_/g, " ");
-  const repoName = `${lang}.wikipedia.org`;
+  const articleName = decodeURIComponent(filePart).replace(/_/g, " ").trim();
+  if (!articleName) return null;
 
-  return { language: lang, articleName, repoName };
+  return { language: lang, articleName, repoName: `${lang}.wikipedia.org` };
 }

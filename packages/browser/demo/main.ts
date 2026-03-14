@@ -11,46 +11,30 @@ declare global {
 
 window.WikiAsGit = { syncArticleToGitHub, parseWikiAsGitPath };
 
-const pathInput = document.getElementById("path") as HTMLInputElement;
-const syncBtn = document.getElementById("sync") as HTMLButtonElement;
 const statusEl = document.getElementById("status") as HTMLDivElement;
 
-if (
-  typeof window !== "undefined" &&
-  window.location.pathname.length > 1 &&
-  window.location.pathname !== "/"
-) {
-  pathInput.value = window.location.pathname + (window.location.search || "");
-}
+const path = window.location.pathname + (window.location.search || "");
+const parsed = parseWikiAsGitPath(path.startsWith("/") ? path : "/" + path);
 
-syncBtn.addEventListener("click", async () => {
-  const path = pathInput.value.trim();
-  const parsed = parseWikiAsGitPath(path.startsWith("/") ? path : "/" + path);
-  if (!parsed) {
-    statusEl.textContent =
-      "Invalid path. Expected: /en.wikipedia.org/blob/master/Article Name.wiki";
-    statusEl.className = "error";
-    return;
-  }
-
-  syncBtn.disabled = true;
-  statusEl.textContent = `Syncing ${parsed.articleName}...`;
+if (!parsed) {
+  statusEl.textContent =
+    "Visit a path like /en.wikipedia.org/Game Boy to sync that article's history to GitHub.";
+  statusEl.className = "info";
+} else {
+  statusEl.textContent = `Syncing ${parsed.articleName} to GitHub...`;
   statusEl.className = "info";
 
-  try {
-    const result = await syncArticleToGitHub(path.startsWith("/") ? path : "/" + path);
-
-    if (result.success) {
-      statusEl.innerHTML = `Done! <a href="${result.repoUrl}">View on GitHub</a>`;
-      statusEl.className = "success";
-    } else {
-      statusEl.textContent = result.error ?? "Unknown error";
+  syncArticleToGitHub(path.startsWith("/") ? path : "/" + path)
+    .then((result) => {
+      if (result.success && result.repoUrl) {
+        window.location.href = result.repoUrl;
+      } else {
+        statusEl.textContent = result.error ?? "Unknown error";
+        statusEl.className = "error";
+      }
+    })
+    .catch((err) => {
+      statusEl.textContent = err instanceof Error ? err.message : String(err);
       statusEl.className = "error";
-    }
-  } catch (err) {
-    statusEl.textContent = err instanceof Error ? err.message : String(err);
-    statusEl.className = "error";
-  } finally {
-    syncBtn.disabled = false;
-  }
-});
+    });
+}
