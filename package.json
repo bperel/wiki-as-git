@@ -13,7 +13,11 @@
     "node": ">=22",
     "pnpm": ">=8"
   },
+  "dependencies": {
+    "sync": "workspace:*"
+  },
   "devDependencies": {
-    "@netlify/functions": "^5.1.3"
+    "@netlify/functions": "^5.1.3",
+    "@types/node": "^20.7.0"
   }
 }
