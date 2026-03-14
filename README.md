@@ -47,3 +47,39 @@ If you have bot credentials for the wiki that you wish to target, copy-paste `pa
 This will lift some limits of the Mediawiki API and make wiki-as-git much faster.
 
 ![alt text](wiki-as-git%20demo.gif)
+
+## Browser package (wiki-as-git-browser)
+
+A browser package that syncs Wikipedia article history to GitHub. When a visitor goes to `wiki-as-git.github.io/en.wikipedia.org/blob/master/Game Boy.wiki`, the package:
+
+1. Fetches the full revision history from the [Wikipedia API](https://en.wikipedia.org/w/api.php)
+2. Creates Git commits for each revision (reusing logic from the core package)
+3. Pushes to `https://github.com/wiki-as-git/en.wikipedia.org`, creating the repo if it doesn't exist
+
+### Usage
+
+```ts
+import { syncArticleToGitHub, parseWikiAsGitPath } from "wiki-as-git-browser";
+
+const result = await syncArticleToGitHub("/en.wikipedia.org/blob/master/Game Boy.wiki", {
+  owner: "wiki-as-git",
+  token: "ghp_...",  // GitHub token with repo scope
+  onProgress: (phase, current, total) => console.log(phase, current, total),
+});
+```
+
+### Demo
+
+Run the demo locally:
+
+```bash
+pnpm run dev:browser
+```
+
+Or from the browser package:
+
+```bash
+pnpm --filter wiki-as-git-browser run dev
+```
+
+This builds the demo and serves it at http://localhost:3000. You need a GitHub token with `repo` scope.

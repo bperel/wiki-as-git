@@ -1,0 +1,33 @@
+{
+  "name": "browser",
+  "version": "0.2.0",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    }
+  },
+  "scripts": {
+    "build": "tsc",
+    "build:demo": "tsc && esbuild demo/main.ts --bundle --outfile=demo/dist/bundle.js --format=iife --global-name=WikiAsGit",
+    "dev": "pnpm run build:demo && serve demo -p 3000 -s"
+  },
+  "dependencies": {
+    "wiki-as-git-core": "workspace:*"
+  },
+  "devDependencies": {
+    "esbuild": "^0.24.0",
+    "serve": "^14.2.4",
+    "typescript": "^5.2.2"
+  },
+  "description": "Browser package to sync Wikipedia article history to GitHub as Git commits",
+  "keywords": [
+    "wikipedia",
+    "git",
+    "github",
+    "browser"
+  ]
+}

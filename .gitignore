@@ -16,6 +16,7 @@ pnpm-debug.log*
 bower_components
 build/Release
 coverage
+dist
 jspm_packages/
 lib-cov
 node_modules/

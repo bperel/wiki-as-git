@@ -4,7 +4,10 @@
   "private": true,
   "packageManager": "pnpm@10.32.1",
   "scripts": {
-    "test": "pnpm -F wiki-as-git test"
+    "test": "pnpm -F wiki-as-git test",
+    "build": "pnpm -r build",
+    "build:demo": "pnpm -F wiki-as-git-browser run build:demo",
+    "dev:browser": "pnpm -F wiki-as-git-browser run dev"
   },
   "engines": {
     "node": ">=22",
