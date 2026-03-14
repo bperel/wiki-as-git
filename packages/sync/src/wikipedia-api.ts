@@ -81,6 +81,9 @@ export async function fetchArticleRevisions(
     }
 
     onProgress?.(results.length);
+    if (rvcontinue) {
+      console.log(`[${new Date().toISOString()}] sync: Wikipedia batch fetched ${results.length} revisions so far`);
+    }
   } while (rvcontinue);
 
   return results;

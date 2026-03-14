@@ -35,6 +35,7 @@ export const handler: Handler = async (
     return { statusCode: 400, body: JSON.stringify({ error: "Missing path in body" }), headers };
   }
 
+  console.log(`[${new Date().toISOString()}] sync: start path=${path}`);
   const result = await syncArticleToGitHub(
     path.startsWith("/") ? path : `/${path}`,
     {
@@ -43,6 +44,7 @@ export const handler: Handler = async (
       branch: "master",
     },
   );
+  console.log(`[${new Date().toISOString()}] sync: done success=${result.success}`);
 
   return {
     statusCode: result.success ? 200 : 400,

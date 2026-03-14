@@ -214,6 +214,9 @@ export async function pushCommitHistory(
   for (let i = 0; i < commits.length; i++) {
     const c = commits[i];
     onProgress?.(i + 1, commits.length);
+    if ((i + 1) % 50 === 0 || i === 0) {
+      console.log(`[${new Date().toISOString()}] sync: pushed ${i + 1}/${commits.length} commits`);
+    }
 
     const blobSha = await createBlob(c.content, config);
     const baseTree = parentSha ? await getCommitTreeSha(parentSha, config) : undefined;

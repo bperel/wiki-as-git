@@ -46,7 +46,9 @@ export async function syncArticleToGitHub(
   };
 
   try {
+    console.log(`[${new Date().toISOString()}] sync: fetching Wikipedia revisions for ${articleName}`);
     const revisions = await fetchArticleRevisions(articleName, language);
+    console.log(`[${new Date().toISOString()}] sync: fetched ${revisions.length} revisions`);
 
     if (revisions.length === 0) {
       return { success: false, error: "No revisions found for article" };
@@ -75,9 +77,12 @@ export async function syncArticleToGitHub(
         });
       }
     }
+    console.log(`[${new Date().toISOString()}] sync: built ${allCommits.length} commits`);
 
+    console.log(`[${new Date().toISOString()}] sync: ensuring repo exists`);
     await ensureRepoExists(config);
 
+    console.log(`[${new Date().toISOString()}] sync: listing existing commits`);
     const existing = await listCommitsForPath(config, fileName);
     const existingKeys = new Set(
       existing.map((c) => `${c.date}:${c.message.substring(0, 100)}`),
@@ -97,7 +102,9 @@ export async function syncArticleToGitHub(
       return { success: false, error: "No valid revisions to commit" };
     }
 
+    console.log(`[${new Date().toISOString()}] sync: pushing ${commits.length} commits to GitHub`);
     await pushCommitHistory(commits, config);
+    console.log(`[${new Date().toISOString()}] sync: push complete`);
 
     return {
       success: true,
