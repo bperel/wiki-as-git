@@ -1,9 +1,9 @@
 [build]
-  command = "pnpm install && pnpm run build:demo"
-  publish = "packages/wiki-as-git-browser/demo"
+  command = "pnpm install && pnpm run build"
+  publish = "packages/browser/demo"
+  functions = "netlify/functions"
 
 # SPA: serve index.html for unmatched routes (e.g. /en.wikipedia.org/blob/master/Game Boy.wiki)
-# Existing files (dist/bundle.js) are served as-is
 [[redirects]]
   from = "/*"
   to = "/index.html"

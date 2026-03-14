@@ -48,38 +48,29 @@ This will lift some limits of the Mediawiki API and make wiki-as-git much faster
 
 ![alt text](wiki-as-git%20demo.gif)
 
-## Browser package (wiki-as-git-browser)
+## Browser + Sync (Netlify)
 
-A browser package that syncs Wikipedia article history to GitHub. When a visitor goes to `wiki-as-git.github.io/en.wikipedia.org/blob/master/Game Boy.wiki`, the package:
+The frontend (`packages/browser`) and sync logic (`packages/sync`) are separate:
 
-1. Fetches the full revision history from the [Wikipedia API](https://en.wikipedia.org/w/api.php)
-2. Creates Git commits for each revision (reusing logic from the core package)
-3. Pushes to `https://github.com/wiki-as-git/en.wikipedia.org`, creating the repo if it doesn't exist
+- **browser**: Static frontend that calls the sync API. Deployed to Netlify CDN.
+- **sync**: Wikipedia + GitHub logic. Runs as a Netlify Function (serverless). Token is stored in env, not exposed to clients.
 
-### Usage
+When a visitor goes to `/en.wikipedia.org/blob/master/Game Boy.wiki`:
 
-```ts
-import { syncArticleToGitHub, parseWikiAsGitPath } from "wiki-as-git-browser";
+1. The frontend calls `POST /.netlify/functions/sync` with the path
+2. The sync function fetches revisions from Wikipedia, creates commits, pushes to GitHub
+3. No token required from the user
 
-const result = await syncArticleToGitHub("/en.wikipedia.org/blob/master/Game Boy.wiki", {
-  owner: "wiki-as-git",
-  token: "ghp_...",  // GitHub token with repo scope
-  onProgress: (phase, current, total) => console.log(phase, current, total),
-});
-```
+### Deploy to Netlify
 
-### Demo
+1. Connect the repo to Netlify
+2. Set `GITHUB_TOKEN` in Site settings → Environment variables (repo scope)
+3. Deploy
 
-Run the demo locally:
+### Local dev
 
 ```bash
 pnpm run dev:browser
 ```
 
-Or from the browser package:
-
-```bash
-pnpm --filter wiki-as-git-browser run dev
-```
-
-This builds the demo and serves it at http://localhost:3000. You need a GitHub token with `repo` scope.
+Serves the frontend at http://localhost:3000. For full testing (including sync), use `netlify dev` so the function runs locally.

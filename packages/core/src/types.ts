@@ -61,3 +61,29 @@ export function getCommitMetadata(
     content,
   };
 }
+
+export interface ParsedPath {
+  /** e.g. "en" */
+  language: string;
+  /** e.g. "Game Boy" */
+  articleName: string;
+  /** e.g. "en.wikipedia.org" */
+  repoName: string;
+}
+
+/**
+ * Parse a path like "en.wikipedia.org/blob/master/Game Boy.wiki"
+ * into language, article name, and repo name.
+ */
+export function parseWikiAsGitPath(pathname: string): ParsedPath | null {
+  const match = pathname.match(
+    /^\/?([a-z]{2,})\.wikipedia\.org\/blob\/(?:[^/]+)\/(.+)\.wiki$/i,
+  );
+  if (!match) return null;
+
+  const [, lang, filePart] = match;
+  const articleName = decodeURIComponent(filePart).replace(/_/g, " ");
+  const repoName = `${lang}.wikipedia.org`;
+
+  return { language: lang, articleName, repoName };
+}
