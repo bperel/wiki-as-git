@@ -8,6 +8,28 @@ importers:
 
   .: {}
 
+  packages/browser:
+    dependencies:
+      core:
+        specifier: workspace:*
+        version: link:../core
+    devDependencies:
+      esbuild:
+        specifier: ^0.24.0
+        version: 0.24.2
+      serve:
+        specifier: ^14.2.4
+        version: 14.2.6
+      typescript:
+        specifier: ^5.2.2
+        version: 5.9.3
+
+  packages/core:
+    devDependencies:
+      typescript:
+        specifier: ^5.2.2
+        version: 5.9.3
+
   packages/wiki-as-git:
     dependencies:
       argparse:
@@ -56,28 +78,6 @@ importers:
       prettier:
         specifier: 3.0.3
         version: 3.0.3
-      typescript:
-        specifier: ^5.2.2
-        version: 5.9.3
-
-  packages/wiki-as-git-browser:
-    dependencies:
-      wiki-as-git-core:
-        specifier: workspace:*
-        version: link:../wiki-as-git-core
-    devDependencies:
-      esbuild:
-        specifier: ^0.24.0
-        version: 0.24.2
-      serve:
-        specifier: ^14.2.4
-        version: 14.2.6
-      typescript:
-        specifier: ^5.2.2
-        version: 5.9.3
-
-  packages/wiki-as-git-core:
-    devDependencies:
       typescript:
         specifier: ^5.2.2
         version: 5.9.3

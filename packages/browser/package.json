@@ -16,7 +16,7 @@
     "dev": "pnpm run build:demo && serve demo -p 3000 -s"
   },
   "dependencies": {
-    "wiki-as-git-core": "workspace:*"
+    "core": "workspace:*"
   },
   "devDependencies": {
     "esbuild": "^0.24.0",
