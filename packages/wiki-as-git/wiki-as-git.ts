@@ -7,7 +7,9 @@ import dayjs from "dayjs";
 import { fetchFromApi } from "./api-fetch";
 import { processXmlDump } from "./xml-dump";
 
-const { name } = JSON.parse(fs.readFileSync("./package.json").toString());
+const { name } = JSON.parse(
+  fs.readFileSync(join(__dirname, "package.json")).toString(),
+);
 
 export const defaults = {
   commitMessageLength: 100,
@@ -110,7 +112,9 @@ export const ensureRepoInitialized = async (dir: string) => {
 
 let settings: Record<string, string>;
 try {
-  settings = JSON.parse(fs.readFileSync("./settings.json").toString());
+  settings = JSON.parse(
+    fs.readFileSync(join(__dirname, "settings.json")).toString(),
+  );
 } catch (error) {
   settings = {};
 }

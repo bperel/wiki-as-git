@@ -1,46 +1,13 @@
 {
-  "name": "wiki-as-git",
+  "name": "wiki-as-git-monorepo",
   "version": "0.2.0",
-  "dependencies": {
-    "argparse": "^2.0.1",
-    "dayjs": "^1.11.19",
-    "fast-xml-parser": "^5.3.3",
-    "isomorphic-git": "^1.36.3",
-    "mwn": "^3.0.1",
-    "seek-bzip": "^2.0.0"
-  },
-  "devDependencies": {
-    "@babel/eslint-parser": "^7.22.15",
-    "@types/argparse": "^2.0.11",
-    "@types/node": "^20.7.0",
-    "@typescript-eslint/eslint-plugin": "^6.7.3",
-    "@typescript-eslint/parser": "^6.7.3",
-    "eslint": "^8.50.0",
-    "eslint-config-prettier": "^9.0.0",
-    "eslint-plugin-prettier": "^5.0.0",
-    "prettier": "3.0.3",
-    "typescript": "^5.2.2"
-  },
-  "description": "Check a Wikipedia article's revision history using git commands",
-  "main": "wiki-as-git.ts",
+  "private": true,
+  "packageManager": "pnpm@10.32.1",
   "scripts": {
-    "test": "bun run wiki-as-git.ts -vvv \"Hello world\""
+    "test": "pnpm -F wiki-as-git test"
   },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/bperel/wiki-as-git.git"
-  },
-  "keywords": [
-    "wikipedia",
-    "git"
-  ],
   "engines": {
-    "bun": ">=1.0.0"
-  },
-  "author": "Bruno Perel",
-  "license": "Apache-2.0",
-  "bugs": {
-    "url": "https://github.com/bperel/wiki-as-git/issues"
-  },
-  "homepage": "https://github.com/bperel/wiki-as-git#readme"
+    "node": ">=22",
+    "pnpm": ">=8"
+  }
 }

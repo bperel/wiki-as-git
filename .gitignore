@@ -8,6 +8,7 @@
 .npm
 .nyc_output
 .yarn-integrity
+pnpm-debug.log*
 *.pid
 *.pid.lock
 *.seed
