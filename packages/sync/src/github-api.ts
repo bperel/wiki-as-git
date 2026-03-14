@@ -61,7 +61,7 @@ export async function ensureRepoExists(config: GitHubConfig): Promise<void> {
   const body = {
     name: repo,
     private: false,
-    auto_init: false,
+    auto_init: true, // Creates initial commit + master ref; avoids "Git Repository is empty"
     description: "Wikipedia articles as Git history",
   };
   const orgRes = await ghFetch(`/orgs/${owner}`, token);
@@ -199,6 +199,31 @@ export interface CommitInput {
   timestamp: string;
 }
 
+/** Bootstrap empty repo using Contents API (Git Data API fails for empty repos) */
+async function createInitialCommitViaContents(
+  filePath: string,
+  content: string,
+  message: string,
+  config: GitHubConfig,
+): Promise<string> {
+  const { owner, repo, token } = config;
+  const branch = config.branch ?? "master";
+  const encoded = Buffer.from(content, "utf8").toString("base64");
+  const res = await ghJson<{ commit?: { sha?: string } }>(
+    `/repos/${owner}/${repo}/contents/${encodeURIComponent(filePath)}`,
+    token,
+    {
+      method: "PUT",
+      body: JSON.stringify({
+        message,
+        content: encoded,
+        branch,
+      }),
+    },
+  );
+  return res.commit?.sha ?? "";
+}
+
 export async function pushCommitHistory(
   commits: CommitInput[],
   config: GitHubConfig,
@@ -211,11 +236,31 @@ export async function pushCommitHistory(
 
   let parentSha: string | null = await getRefSha(ref, config);
 
+  const totalCommits = commits.length;
+  let bootstrapped = false;
+
+  // Empty repo: Git Data API returns "Git Repository is empty". Use Contents API for first commit.
+  if (parentSha === null && commits.length > 0) {
+    const first = commits[0];
+    console.log(`[${new Date().toISOString()}] sync: empty repo - bootstrapping via Contents API`);
+    parentSha = await createInitialCommitViaContents(
+      first.fileName,
+      first.content,
+      first.message,
+      config,
+    );
+    bootstrapped = true;
+    onProgress?.(1, totalCommits);
+    if (commits.length === 1) return parentSha;
+    commits = commits.slice(1);
+  }
+
   for (let i = 0; i < commits.length; i++) {
     const c = commits[i];
-    onProgress?.(i + 1, commits.length);
+    const done = i + 1 + (bootstrapped ? 1 : 0);
+    onProgress?.(done, totalCommits);
     if ((i + 1) % 50 === 0 || i === 0) {
-      console.log(`[${new Date().toISOString()}] sync: pushed ${i + 1}/${commits.length} commits`);
+      console.log(`[${new Date().toISOString()}] sync: pushed ${done}/${totalCommits} commits`);
     }
 
     const blobSha = await createBlob(c.content, config);
