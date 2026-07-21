@@ -23,11 +23,11 @@ export interface CommitInput {
 /**
  * Build the full commit history in a temp dir and push to GitHub in one operation.
  */
-export async function pushViaGit(
+export const pushViaGit = async (
   commits: CommitInput[],
   config: GitHubConfig,
   onProgress?: (index: number, total: number) => void,
-): Promise<void> {
+) => {
   const branch = config.branch ?? "master";
   const total = commits.length;
   if (total === 0) return;
@@ -89,4 +89,4 @@ export async function pushViaGit(
   } finally {
     fs.rmSync(tmpDir, { recursive: true, force: true });
   }
-}
+};

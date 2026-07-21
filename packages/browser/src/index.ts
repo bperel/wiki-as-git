@@ -18,10 +18,10 @@ export interface SyncResult {
  * Trigger sync via the Netlify Function.
  * The API URL is relative (/.netlify/functions/sync) so it works on Netlify.
  */
-export async function syncArticleToGitHub(
+export const syncArticleToGitHub = async (
   pathname: string,
   options?: { apiBase?: string },
-): Promise<SyncResult> {
+) => {
   const parsed = parseWikiAsGitPath(pathname);
   if (!parsed) {
     return { success: false, error: `Invalid path: ${pathname}` };
@@ -41,4 +41,4 @@ export async function syncArticleToGitHub(
     return { success: false, error: data.error ?? `HTTP ${res.status}` };
   }
   return data;
-}
+};

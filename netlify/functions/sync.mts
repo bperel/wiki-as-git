@@ -11,7 +11,11 @@ export const handler: Handler = async (
   };
 
   if (event.httpMethod !== "POST") {
-    return { statusCode: 405, body: JSON.stringify({ error: "Method not allowed" }), headers };
+    return {
+      statusCode: 405,
+      body: JSON.stringify({ error: "Method not allowed" }),
+      headers,
+    };
   }
 
   const token = process.env.GITHUB_TOKEN;
@@ -27,16 +31,26 @@ export const handler: Handler = async (
   try {
     body = JSON.parse(event.body ?? "{}");
   } catch {
-    return { statusCode: 400, body: JSON.stringify({ error: "Invalid JSON body" }), headers };
+    return {
+      statusCode: 400,
+      body: JSON.stringify({ error: "Invalid JSON body" }),
+      headers,
+    };
   }
 
   const path = body.path?.trim();
   if (!path) {
-    return { statusCode: 400, body: JSON.stringify({ error: "Missing path in body" }), headers };
+    return {
+      statusCode: 400,
+      body: JSON.stringify({ error: "Missing path in body" }),
+      headers,
+    };
   }
 
   const owner = process.env.GITHUB_OWNER ?? "wiki-as-git";
-  console.log(`[${new Date().toISOString()}] sync: start path=${path} owner=${owner}`);
+  console.log(
+    `[${new Date().toISOString()}] sync: start path=${path} owner=${owner}`,
+  );
   const result = await syncArticleToGitHub(
     path.startsWith("/") ? path : `/${path}`,
     {
@@ -45,7 +59,9 @@ export const handler: Handler = async (
       branch: "master",
     },
   );
-  console.log(`[${new Date().toISOString()}] sync: done success=${result.success}`);
+  console.log(
+    `[${new Date().toISOString()}] sync: done success=${result.success}`,
+  );
 
   return {
     statusCode: result.success ? 200 : 400,

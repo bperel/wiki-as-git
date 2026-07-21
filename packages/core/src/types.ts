@@ -33,11 +33,11 @@ export interface CommitMetadata {
   content: string;
 }
 
-export function getCommitMetadata(
+export const getCommitMetadata = (
   revision: ApiRevision,
   _articleName: string,
   language: string,
-): CommitMetadata | null {
+) => {
   const content =
     revision.slots?.main?.content ??
     (revision as { content?: string }).content ??
@@ -50,8 +50,7 @@ export function getCommitMetadata(
   }
 
   const rawMessage = revision.comment ?? "";
-  const message =
-    rawMessage.substring(0, COMMIT_MESSAGE_LENGTH) || "\n";
+  const message = rawMessage.substring(0, COMMIT_MESSAGE_LENGTH) || "\n";
 
   return {
     message,
@@ -60,7 +59,7 @@ export function getCommitMetadata(
     timestamp,
     content,
   };
-}
+};
 
 export interface ParsedPath {
   /** e.g. "en" */
@@ -75,10 +74,8 @@ export interface ParsedPath {
  * Parse a path into language, article name, and repo name.
  * Format: /fr.wikipedia.org/Game Boy (no blob/master, no .wiki)
  */
-export function parseWikiAsGitPath(pathname: string): ParsedPath | null {
-  const match = pathname.match(
-    /^\/?([a-z]{2,})\.wikipedia\.org\/(.+)$/i,
-  );
+export const parseWikiAsGitPath = (pathname: string): ParsedPath | null => {
+  const match = pathname.match(/^\/?([a-z]{2,})\.wikipedia\.org\/(.+)$/i);
   if (!match) return null;
 
   const [, lang, filePart] = match;
@@ -86,4 +83,4 @@ export function parseWikiAsGitPath(pathname: string): ParsedPath | null {
   if (!articleName) return null;
 
   return { language: lang, articleName, repoName: `${lang}.wikipedia.org` };
-}
+};

@@ -3,7 +3,11 @@
  * Token is read from env (GITHUB_TOKEN), not from client.
  */
 
-import { getCommitMetadata, sanitizeArticleName, parseWikiAsGitPath } from "core";
+import {
+  getCommitMetadata,
+  sanitizeArticleName,
+  parseWikiAsGitPath,
+} from "core";
 import { fetchArticleRevisions } from "./wikipedia-api.js";
 import { ensureRepoExists, type GitHubConfig } from "./github-api.js";
 import { pushViaGit } from "./git-push.js";
@@ -24,10 +28,10 @@ export interface SyncOptions {
  * Sync a Wikipedia article's history to GitHub.
  * Used by the Netlify Function.
  */
-export async function syncArticleToGitHub(
+export const syncArticleToGitHub = async (
   pathname: string,
   options: SyncOptions,
-): Promise<SyncResult> {
+) => {
   const parsed = parseWikiAsGitPath(pathname);
   if (!parsed) {
     return { success: false, error: `Invalid path: ${pathname}` };
@@ -42,9 +46,13 @@ export async function syncArticleToGitHub(
   };
 
   try {
-    console.log(`[${new Date().toISOString()}] sync: fetching Wikipedia revisions for ${articleName}`);
+    console.log(
+      `[${new Date().toISOString()}] sync: fetching Wikipedia revisions for ${articleName}`,
+    );
     const revisions = await fetchArticleRevisions(articleName, language);
-    console.log(`[${new Date().toISOString()}] sync: fetched ${revisions.length} revisions`);
+    console.log(
+      `[${new Date().toISOString()}] sync: fetched ${revisions.length} revisions`,
+    );
 
     if (revisions.length === 0) {
       return { success: false, error: "No revisions found for article" };
@@ -73,7 +81,9 @@ export async function syncArticleToGitHub(
         });
       }
     }
-    console.log(`[${new Date().toISOString()}] sync: built ${allCommits.length} commits`);
+    console.log(
+      `[${new Date().toISOString()}] sync: built ${allCommits.length} commits`,
+    );
 
     console.log(`[${new Date().toISOString()}] sync: ensuring repo exists`);
     await ensureRepoExists(config);
@@ -97,6 +107,6 @@ export async function syncArticleToGitHub(
     console.error(`[${new Date().toISOString()}] sync: error`, message);
     return { success: false, error: message };
   }
-}
+};
 
 export { parseWikiAsGitPath } from "core";

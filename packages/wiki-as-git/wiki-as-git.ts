@@ -115,7 +115,7 @@ try {
   settings = JSON.parse(
     fs.readFileSync(join(__dirname, "settings.json")).toString(),
   );
-} catch (error) {
+} catch {
   settings = {};
 }
 const argparser = new ArgumentParser({
@@ -182,7 +182,7 @@ if (args.xml_dump) {
       console.info(
         "Login successful. Note that logging in only allows to make wiki-as-git faster if bot credentials are used",
       );
-    } catch (e) {
+    } catch {
       console.error(
         "Login failed. Log in with a bot account to make wiki-as-git faster!",
       );

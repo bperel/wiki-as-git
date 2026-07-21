@@ -13,15 +13,22 @@
   "scripts": {
     "build": "tsc",
     "build:demo": "tsc && esbuild demo/main.ts --bundle --outfile=demo/dist/bundle.js --format=iife --global-name=WikiAsGit",
-    "dev": "pnpm run build:demo && serve demo -p 3000 -s"
+    "dev": "pnpm run build:demo && serve demo -p 3000 -s",
+    "lint": "eslint ."
   },
   "dependencies": {
     "core": "workspace:*"
   },
   "devDependencies": {
-    "esbuild": "^0.24.0",
+    "@eslint/js": "^10.0.1",
+    "esbuild": "^0.28.1",
+    "eslint": "^10.7.0",
+    "eslint-config-prettier": "^10.1.8",
+    "eslint-plugin-prettier": "^5.5.6",
+    "prettier": "^3.9.6",
     "serve": "^14.2.4",
-    "typescript": "^5.2.2"
+    "typescript": "^6.0.3",
+    "typescript-eslint": "^8.65.0"
   },
   "description": "Browser package to sync Wikipedia article history to GitHub as Git commits",
   "keywords": [

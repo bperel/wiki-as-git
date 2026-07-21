@@ -3,7 +3,7 @@
  * Uses fetch() - works in Node 18+ (Netlify Functions) and browser.
  */
 
-import type { ApiRevision, RevisionWithArticle } from "core";
+import type { RevisionWithArticle } from "core";
 
 const RV_LIMIT = 500;
 
@@ -28,22 +28,20 @@ interface MediaWikiApiResponse {
   };
 }
 
-function toApiRevision(r: MwRevision): ApiRevision {
-  return {
-    revid: r.revid,
-    parentid: r.parentid,
-    timestamp: r.timestamp,
-    user: r.user,
-    comment: r.comment,
-    slots: r.slots ? { main: { content: r.slots.main?.content } } : undefined,
-  };
-}
+const toApiRevision = (r: MwRevision) => ({
+  revid: r.revid,
+  parentid: r.parentid,
+  timestamp: r.timestamp,
+  user: r.user,
+  comment: r.comment,
+  slots: r.slots ? { main: { content: r.slots.main?.content } } : undefined,
+});
 
-export async function fetchArticleRevisions(
+export const fetchArticleRevisions = async (
   articleName: string,
   language: string,
   onProgress?: (fetched: number) => void,
-): Promise<RevisionWithArticle[]> {
+): Promise<RevisionWithArticle[]> => {
   const apiUrl = `https://${language}.wikipedia.org/w/api.php`;
   const results: RevisionWithArticle[] = [];
   let rvcontinue: string | undefined;
@@ -82,9 +80,11 @@ export async function fetchArticleRevisions(
 
     onProgress?.(results.length);
     if (rvcontinue) {
-      console.log(`[${new Date().toISOString()}] sync: Wikipedia batch fetched ${results.length} revisions so far`);
+      console.log(
+        `[${new Date().toISOString()}] sync: Wikipedia batch fetched ${results.length} revisions so far`,
+      );
     }
   } while (rvcontinue);
 
   return results;
-}
+};

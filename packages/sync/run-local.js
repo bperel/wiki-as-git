@@ -28,7 +28,11 @@ if (!token) {
 }
 
 console.log(`Syncing ${path} to ${owner}...`);
-const result = await syncArticleToGitHub(path, { owner, token, branch: "master" });
+const result = await syncArticleToGitHub(path, {
+  owner,
+  token,
+  branch: "master",
+});
 
 if (result.success) {
   console.log("Done:", result.repoUrl);
