@@ -75,8 +75,8 @@ export const processXmlDump = async (xmlPath: string) => {
   const pages = Array.isArray(dump.mediawiki.page)
     ? dump.mediawiki.page
     : dump.mediawiki.page
-    ? [dump.mediawiki.page]
-    : [];
+      ? [dump.mediawiki.page]
+      : [];
 
   console.info(`Found ${pages.length} pages in dump`);
 
@@ -99,8 +99,8 @@ export const processXmlDump = async (xmlPath: string) => {
     const revisions = Array.isArray(page.revision)
       ? page.revision
       : page.revision
-      ? [page.revision]
-      : [];
+        ? [page.revision]
+        : [];
 
     if (revisions.length === 0) {
       console.warn(`No revisions found for article: ${articleName}, skipping`);

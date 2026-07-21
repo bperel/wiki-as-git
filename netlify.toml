@@ -1,0 +1,10 @@
+[build]
+  command = "pnpm install && pnpm run build"
+  publish = "packages/browser/demo"
+  functions = "netlify/functions"
+
+# SPA: serve index.html for unmatched routes (e.g. /en.wikipedia.org/Game Boy)
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200

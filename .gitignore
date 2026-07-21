@@ -1,5 +1,6 @@
 .DS_Store
 .env
+packages/sync/.env
 .eslintcache
 .grunt
 .idea
@@ -8,6 +9,7 @@
 .npm
 .nyc_output
 .yarn-integrity
+pnpm-debug.log*
 *.pid
 *.pid.lock
 *.seed
@@ -15,6 +17,7 @@
 bower_components
 build/Release
 coverage
+dist
 jspm_packages/
 lib-cov
 node_modules/
@@ -24,3 +27,5 @@ settings.json
 typings/
 yarn-debug.log*
 yarn-error.log*
+# Local Netlify folder
+.netlify
